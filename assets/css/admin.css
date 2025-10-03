@@ -322,6 +322,16 @@
     background: #e2e8f0;
     padding: 0 4px;
     border-radius: 4px;
+    white-space: normal;
+    /* allow wrapping */
+    overflow-wrap: anywhere;
+    /* break long words/paths */
+    word-break: break-word;
+    /* fallback for older browsers */
+    display: inline-block;
+    /* ensures it respects wrapping inside */
+    max-width: 100%;
+    /* prevents overflowing container */
 }
 
 .sp-template-section+.sp-template-section {
@@ -360,6 +370,7 @@
 .sp-add-snippet__tabs .nav-tab-active {
     background: #fff;
 }
+
 .sp-add-snippet__body {
     margin-top: 24px;
 }
@@ -424,7 +435,7 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
-.sp-panel + .sp-panel {
+.sp-panel+.sp-panel {
     margin-top: 20px;
 }
 
@@ -534,9 +545,17 @@
     display: inline-block;
 }
 
-.dot--red { background: #ff5f56; }
-.dot--yellow { background: #ffbd2e; }
-.dot--green { background: #27c93f; }
+.dot--red {
+    background: #ff5f56;
+}
+
+.dot--yellow {
+    background: #ffbd2e;
+}
+
+.dot--green {
+    background: #27c93f;
+}
 
 .sp-panel__footer {
     margin-top: 20px;
@@ -546,6 +565,7 @@
     cursor: not-allowed;
     opacity: 0.6;
 }
+
 .sp-editor-tabs {
     margin-top: 24px;
 }
@@ -623,6 +643,7 @@
     width: 90px;
     text-align: right;
 }
+
 .sp-settings-form .trio {
     display: grid;
     gap: 8px;
@@ -644,6 +665,7 @@
     gap: 24px;
     margin-top: 24px;
 }
+
 .sp-settings-tab-content {
     margin-top: 24px;
 }
@@ -680,6 +702,7 @@
     min-width: 90px;
     font-weight: 600;
 }
+
 .sp-search-replace__form select,
 .sp-search-replace__form textarea,
 .sp-search-replace__form input[type="text"],
@@ -787,12 +810,12 @@
     transition: opacity 0.2s ease;
 }
 
-.sp-checkbox input:checked + .sp-checkbox__control {
+.sp-checkbox input:checked+.sp-checkbox__control {
     border-color: #3858e9;
     background: #3858e9;
 }
 
-.sp-checkbox input:checked + .sp-checkbox__control::after {
+.sp-checkbox input:checked+.sp-checkbox__control::after {
     opacity: 1;
 }
 
