@@ -2,8 +2,10 @@
 
 namespace SnippetPress\Admin\Actions;
 
+use SnippetPress\Admin\Library\Snippet_Library;
 use SnippetPress\Admin\Notices;
 use SnippetPress\Admin\Snippet_Service;
+use SnippetPress\Infrastructure\Capabilities;
 
 /**
  * Coordinates admin-post actions and bulk operations for snippets.
@@ -23,6 +25,7 @@ class Snippet_Actions {
         add_action( 'admin_post_sp_duplicate_snippet', [ $this, 'handle_duplicate_snippet' ] );
         add_action( 'admin_post_sp_delete_snippet', [ $this, 'handle_delete_snippet' ] );
         add_action( 'admin_post_sp_export_snippet', [ $this, 'handle_export_snippet' ] );
+        add_action( 'wp_ajax_sp_use_library_snippet', [ $this, 'handle_use_library_snippet' ] );
     }
 
     public function maybe_handle_snippet_actions(): void {
@@ -168,6 +171,115 @@ class Snippet_Actions {
         exit;
     }
 
+    public function handle_use_library_snippet(): void {
+        if ( ! current_user_can( Capabilities::EDIT ) ) {
+            wp_send_json_error(
+                [ 'message' => __( 'You do not have permission to create snippets.', 'snippet-press' ) ],
+                403
+            );
+        }
+
+        $nonce = isset( $_POST['nonce'] ) ? wp_unslash( $_POST['nonce'] ) : '';
+
+        if ( ! wp_verify_nonce( $nonce, 'sp_use_library_snippet' ) ) {
+            wp_send_json_error(
+                [ 'message' => __( 'Security check failed. Please refresh and try again.', 'snippet-press' ) ],
+                403
+            );
+        }
+
+        $slug = isset( $_POST['slug'] ) ? sanitize_key( wp_unslash( $_POST['slug'] ) ) : '';
+
+        if ( '' === $slug ) {
+            wp_send_json_error(
+                [ 'message' => __( 'Select a snippet to continue.', 'snippet-press' ) ],
+                400
+            );
+        }
+
+        $library = new Snippet_Library();
+        $snippet = $library->get( $slug );
+
+        if ( ! is_array( $snippet ) || empty( $snippet['code'] ) ) {
+            wp_send_json_error(
+                [ 'message' => __( 'That snippet could not be found.', 'snippet-press' ) ],
+                404
+            );
+        }
+
+        $code = $this->normalize_snippet_code( isset( $snippet['code'] ) ? (string) $snippet['code'] : '' );
+
+
+
+        $data = [
+            'name'        => isset( $snippet['title'] ) ? wp_strip_all_tags( (string) $snippet['title'] ) : ucwords( str_replace( '-', ' ', $slug ) ),
+            'description' => $snippet['description'] ?? '',
+            'code'        => $code,
+            'status'      => 'disabled',
+            'type'        => $snippet['type'] ?? 'php',
+            'scopes'      => $snippet['scopes'] ?? [],
+            'priority'    => isset( $snippet['priority'] ) ? (int) $snippet['priority'] : 10,
+        ];
+
+        if ( ! empty( $snippet['notes'] ) ) {
+            $data['notes'] = $snippet['notes'];
+        }
+
+        if ( ! empty( $snippet['variables'] ) ) {
+            $data['variables'] = (array) $snippet['variables'];
+        }
+
+        if ( ! empty( $snippet['conditions'] ) ) {
+            $data['conditions'] = (array) $snippet['conditions'];
+        }
+
+        $result = Snippet_Service::create( $data );
+
+        if ( is_wp_error( $result ) ) {
+            wp_send_json_error(
+                [ 'message' => $result->get_error_message() ],
+                500
+            );
+        }
+
+        $redirect = get_edit_post_link( $result, 'url' );
+
+        if ( ! $redirect ) {
+            $redirect = admin_url( 'post.php?post=' . $result . '&action=edit' );
+        }
+
+        wp_send_json_success(
+            [
+                'redirect'  => $redirect,
+                'snippetId' => $result,
+            ]
+        );
+    }
+
+    /**
+     * Normalize snippet code pulled from library definitions before saving.
+     */
+    protected function normalize_snippet_code( string $code ): string {
+        if ( '' === $code ) {
+            return '';
+        }
+
+        $code = html_entity_decode( $code, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        $code = str_replace( [ "\r\n", "\r" ], "\n", $code );
+        $code = str_replace( [ "`n", "`r", "`t" ], [ "\n", '', '' ], $code );
+        $code = str_replace( [ '\n', '\r', '\t' ], [ "\n", '', '' ], $code );
+        $code = preg_replace( '/<!--\\?php\s*/i', '<?php ', $code );
+        $code = preg_replace( '/\\?-->/i', '?>', $code );
+        $code = preg_replace( '/<br\s*\/?>(\n)?/i', "\n", $code );
+        $code = trim( $code );
+
+        if ( '' !== $code && false === strpos( $code, '<?' ) ) {
+            $code = "<?php\n" . $code;
+        }
+
+        return $code;
+    }
+
     protected function verify_admin_post_request(): array {
         $id       = isset( $_REQUEST['snippet_id'] ) ? absint( $_REQUEST['snippet_id'] ) : 0;
         $nonce    = isset( $_REQUEST['_wpnonce'] ) ? wp_unslash( $_REQUEST['_wpnonce'] ) : '';
@@ -196,3 +308,4 @@ class Snippet_Actions {
         exit;
     }
 }
+

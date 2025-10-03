@@ -287,12 +287,49 @@
     color: #50575e;
 }
 
+.sp-library-filter-heading {
+    margin: 24px 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #50575e;
+}
+
+.sp-library-filter-list--tags {
+    margin-top: 8px;
+}
+
+.sp-library-filter-list--tags .sp-library-filter {
+    font-size: 13px;
+}
+
 .sp-library-catalog {
     flex: 1;
 }
 
+.sp-library-note {
+    margin: 16px 0 32px;
+    padding: 16px 20px;
+    border-radius: 6px;
+    border-left: 4px solid #3858e9;
+    background: #f2f5ff;
+    color: #1d2327;
+}
+
+.sp-library-note code {
+    font-family: Menlo, Consolas, 'Liberation Mono', monospace;
+    background: #e2e8f0;
+    padding: 0 4px;
+    border-radius: 4px;
+}
+
 .sp-template-section+.sp-template-section {
-    margin-top: 32px;
+    margin-top: 48px;
+}
+
+.sp-template-section .sp-template-group-heading {
+    margin-bottom: 12px;
 }
 
 .sp-template-section .sp-template-grid {

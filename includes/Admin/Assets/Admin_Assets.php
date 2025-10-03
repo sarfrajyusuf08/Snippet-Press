@@ -11,11 +11,34 @@ class Admin_Assets {
     }
 
     public function enqueue( string $hook ): void {
-        if ( false === strpos( $hook, 'sp-' ) ) {
+        $page     = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
+        $hook_hit = strpos( $hook, 'sp-' ) !== false || strpos( $hook, 'snippetpress_page_' ) !== false;
+        $page_hit = '' !== $page && strpos( $page, 'sp-' ) === 0;
+
+        if ( ! $hook_hit && ! $page_hit ) {
             return;
         }
 
-        wp_enqueue_style( 'snippet-press-admin', SNIPPET_PRESS_URL . 'assets/css/admin.css', [], SNIPPET_PRESS_VERSION );
-        wp_enqueue_script( 'snippet-press-admin', SNIPPET_PRESS_URL . 'assets/js/admin.js', [ 'jquery' ], SNIPPET_PRESS_VERSION, true );
+        $style_path  = SNIPPET_PRESS_DIR . 'assets/css/admin.css';
+        $script_path = SNIPPET_PRESS_DIR . 'assets/js/admin.js';
+
+        $style_version  = file_exists( $style_path ) ? (string) filemtime( $style_path ) : SNIPPET_PRESS_VERSION;
+        $script_version = file_exists( $script_path ) ? (string) filemtime( $script_path ) : SNIPPET_PRESS_VERSION;
+
+        wp_enqueue_style( 'snippet-press-admin', SNIPPET_PRESS_URL . 'assets/css/admin.css', [], $style_version );
+        wp_enqueue_script( 'snippet-press-admin', SNIPPET_PRESS_URL . 'assets/js/admin.js', [ 'jquery' ], $script_version, true );
+
+        wp_localize_script(
+            'snippet-press-admin',
+            'snippetPressLibrary',
+            [
+                'ajaxUrl' => admin_url( 'admin-ajax.php' ),
+                'nonce'   => wp_create_nonce( 'sp_use_library_snippet' ),
+                'strings' => [
+                    'error'   => __( 'We could not create that snippet. Please try again.', 'snippet-press' ),
+                    'loading' => __( 'Creating...', 'snippet-press' ),
+                ],
+            ]
+        );
     }
 }

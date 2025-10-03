@@ -87,8 +87,9 @@ class Snippet_Card_Renderer {
         }
 
         echo '<div class="sp-template-actions">';
-        echo '<a href="#" class="button button-secondary">' . esc_html__( 'Use Snippet', 'snippet-press' ) . '</a>';
+        echo '<button type="button" class="button button-secondary sp-use-snippet">' . esc_html__( 'Use Snippet', 'snippet-press' ) . '</button>';
         echo '</div>';
         echo '</div>';
     }
 }
+

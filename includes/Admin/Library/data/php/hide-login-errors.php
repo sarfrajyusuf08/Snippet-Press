@@ -1,23 +1,29 @@
 <?php
 
 return [
-    'slug'        => 'hide-login-errors',
+    'slug'        => 'hide-login-error-details',
     'title'       => __( 'Hide Login Error Details', 'snippet-press' ),
-    'description' => __( 'Prevent the login screen from revealing whether a username or password is incorrect.', 'snippet-press' ),
-    'category'    => 'login',
-    'tags'        => [ 'security' ],
+    'description' => __( 'Replaces detailed login errors with a hardened, generic message.', 'snippet-press' ),
+    'category'    => 'security',
+    'tags'        => [ 'login', 'hardening' ],
     'highlights'  => [
-        __( 'Improves security by avoiding hints for attackers.', 'snippet-press' ),
-        __( 'Supports custom messaging using the WordPress translation system.', 'snippet-press' ),
+        __( 'Stops attackers from learning if a username exists.', 'snippet-press' ),
+        __( 'Provides a translatable message for all failed attempts.', 'snippet-press' ),
     ],
     'code'        => <<<'PHP'
-add_filter( 'login_errors', function () {
-    return __( 'Something went wrong. Please double-check your details.', 'snippet-press' );
-} );
+if ( ! defined( 'ABSPATH' ) ) {
+    exit;
+}
+
+function spx_hide_login_errors(): string {
+    return __( 'Invalid login credentials. Please try again.', 'snippet-press' );
+}
+
+add_filter( 'login_errors', 'spx_hide_login_errors' );
 PHP,
     'type'        => 'php',
-    'scopes'      => [ 'login' ],
+    'scopes'      => [ 'frontend' ],
     'priority'    => 10,
     'status'      => 'disabled',
-    'notes'       => __( 'Tailor the login message after installing to match your brand voice.', 'snippet-press' ),
+    'notes'       => __( 'Adjust the wording if you want the message to include brand tone or additional help.', 'snippet-press' ),
 ];

@@ -28,9 +28,9 @@ class Library_View {
      *
      * @param array<int, array<string, mixed>> $snippets   Snippet definitions from the library.
      * @param array<string, string>            $categories Map of category slug => label.
-     * @param array<string, string>            $tag_labels Map of tag slug => label.
+     * @param array<string, array{label:string,count:int}> $tags Map of tag slug => details.
      */
-    public function render( array $snippets, array $categories, array $tag_labels ): void {
+    public function render( array $snippets, array $categories, array $tags ): void {
         $total_snippets     = count( $snippets );
         $available_snippets = count( $this->library->filter( 'available' ) );
 
@@ -49,8 +49,13 @@ class Library_View {
         );
         echo '</div>';
 
+        $tag_labels = [];
+        foreach ( $tags as $slug => $tag ) {
+            $tag_labels[ $slug ] = $tag['label'];
+        }
+
         echo '<div class="sp-library-layout">';
-        $this->render_sidebar( $categories, $total_snippets, $available_snippets );
+        $this->render_sidebar( $categories, $total_snippets, $available_snippets, $tags );
         $this->render_catalog( $snippets, $tag_labels );
         echo '</div>';
     }
@@ -58,7 +63,7 @@ class Library_View {
     /**
      * Render the sidebar filters and search box.
      */
-    private function render_sidebar( array $categories, int $total, int $available ): void {
+    private function render_sidebar( array $categories, int $total, int $available, array $tags ): void {
         echo '<aside class="sp-library-sidebar">';
         echo '<input type="search" class="sp-library-search" placeholder="' . esc_attr__( 'Search snippets', 'snippet-press' ) . '" />';
         echo '<ul class="sp-library-filter-list">';
@@ -72,6 +77,16 @@ class Library_View {
         }
 
         echo '</ul>';
+
+        if ( ! empty( $tags ) ) {
+            echo '<h3 class="sp-library-filter-heading">' . esc_html__( 'Tags', 'snippet-press' ) . '</h3>';
+            echo '<ul class="sp-library-filter-list sp-library-filter-list--tags">';
+            foreach ( $tags as $slug => $tag ) {
+                $this->render_filter_link( 'tag-' . $slug, $tag['label'], $tag['count'] );
+            }
+            echo '</ul>';
+        }
+
         echo '</aside>';
     }
 
@@ -95,6 +110,7 @@ class Library_View {
     private function render_catalog( array $snippets, array $tag_labels ): void {
         echo '<div class="sp-library-catalog">';
         $this->render_quick_actions();
+        $this->render_library_note();
 
         if ( empty( $snippets ) ) {
             echo '<div class="sp-empty-panel">';
@@ -119,6 +135,23 @@ class Library_View {
 
         echo '</div>';
         echo '</section>';
+        echo '</div>';
+    }
+
+    /**
+     * Explain how to extend the library with custom files.
+     */
+    private function render_library_note(): void {
+        echo '<div class="sp-library-note">';
+        echo wp_kses(
+            sprintf(
+                __( 'Add your own reusable snippets by dropping PHP files into <code>%1$s</code>, JavaScript into <code>%2$s</code>, or CSS into <code>%3$s</code>. Each file should return the snippet definition array described in <code>docs/ADDING-SNIPPETS.md</code>.', 'snippet-press' ),
+                'includes/Admin/Library/data/php/',
+                'includes/Admin/Library/data/js/',
+                'includes/Admin/Library/data/css/'
+            ),
+            [ 'code' => [] ]
+        );
         echo '</div>';
     }
 

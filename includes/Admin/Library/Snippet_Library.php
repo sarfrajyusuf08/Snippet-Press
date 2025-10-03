@@ -105,6 +105,28 @@ class Snippet_Library {
             );
         }
 
+        if ( 0 === strpos( $filter, 'category-' ) ) {
+            $category = substr( $filter, 9 );
+
+            return array_filter(
+                $snippets,
+                static function ( array $snippet ) use ( $category ): bool {
+                    return $snippet['category'] === $category;
+                }
+            );
+        }
+
+        if ( 0 === strpos( $filter, 'tag-' ) ) {
+            $tag = substr( $filter, 4 );
+
+            return array_filter(
+                $snippets,
+                static function ( array $snippet ) use ( $tag ): bool {
+                    return in_array( $tag, (array) $snippet['tags'], true );
+                }
+            );
+        }
+
         return array_filter(
             $snippets,
             static function ( array $snippet ) use ( $filter ): bool {
@@ -271,32 +293,56 @@ class Snippet_Library {
      */
     public function get_categories(): array {
         $categories = [];
-        $snippets = $this->all();
-        foreach ($snippets as $snippet) {
-            if (!isset($categories[$snippet['category']])) {
-                $categories[$snippet['category']] = $this->label_for_category($snippet['category']);
+        $snippets   = $this->all();
+
+        foreach ( $snippets as $snippet ) {
+            $category = $snippet['category'];
+
+            if ( ! isset( $categories[ $category ] ) ) {
+                $categories[ $category ] = $this->label_for_category( $category );
             }
         }
-        asort($categories);
+
+        asort( $categories );
+
         return $categories;
     }
 
     /**
-     * Get all unique tag slugs and their labels.
+     * Get all unique tag slugs, labels, and usage counts.
      *
-     * @return array<string, string>
+     * @return array<string, array{label:string,count:int}>
      */
     public function get_tags(): array {
-        $tags = [];
+        $tags     = [];
         $snippets = $this->all();
-        foreach ($snippets as $snippet) {
-            foreach ($snippet['tags'] as $tag) {
-                if (!isset($tags[$tag])) {
-                    $tags[$tag] = ucwords(str_replace('-', ' ', $tag));
+
+        foreach ( $snippets as $snippet ) {
+            foreach ( (array) $snippet['tags'] as $tag ) {
+                $tag = sanitize_key( (string) $tag );
+
+                if ( '' === $tag ) {
+                    continue;
                 }
+
+                if ( ! isset( $tags[ $tag ] ) ) {
+                    $tags[ $tag ] = [
+                        'label' => ucwords( str_replace( '-', ' ', $tag ) ),
+                        'count' => 0,
+                    ];
+                }
+
+                $tags[ $tag ]['count']++;
             }
         }
-        asort($tags);
+
+        uasort(
+            $tags,
+            static function ( array $a, array $b ): int {
+                return strcmp( $a['label'], $b['label'] );
+            }
+        );
+
         return $tags;
     }
 
@@ -413,4 +459,12 @@ class Snippet_Library {
         return ucwords( $slug );
     }
 }
+
+
+
+
+
+
+
+
 
