@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\CLI;
+namespace SnippetPress\CLI;
 
 use WP_CLI\CommandWithUpgrade;
 use WP_CLI\Utils;
@@ -20,3 +20,4 @@ class Commands extends CommandWithUpgrade {
         \WP_CLI::log( 'Snippet Press CLI commands coming soon.' );
     }
 }
+

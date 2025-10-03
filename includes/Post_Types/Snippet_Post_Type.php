@@ -1,8 +1,8 @@
 <?php
 
-namespace SnippetVault\Post_Types;
+namespace SnippetPress\Post_Types;
 
-use SnippetVault\Infrastructure\Service_Provider;
+use SnippetPress\Infrastructure\Service_Provider;
 
 /**
  * Registers the Snippet custom post type and related taxonomies/meta.
@@ -272,3 +272,4 @@ class Snippet_Post_Type extends Service_Provider {
         }
     }
 }
+

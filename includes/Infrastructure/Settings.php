@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Infrastructure;
+namespace SnippetPress\Infrastructure;
 
 /**
  * Handles plugin settings storage and defaults.
@@ -75,6 +75,10 @@ class Settings extends Service_Provider {
             'lint_css'                => true,
             'php_binary_path'         => 'php',
             'logging_enabled'         => false,
+            'inject_header'          => '',
+            'inject_body'            => '',
+            'inject_footer'          => '',
         ];
     }
 }
+

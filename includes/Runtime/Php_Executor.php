@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Runtime;
+namespace SnippetPress\Runtime;
 
 /**
  * Executes PHP snippets within an isolated scope.
@@ -23,3 +23,4 @@ class Php_Executor {
         $wrapper();
     }
 }
+

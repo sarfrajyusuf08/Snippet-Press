@@ -25,11 +25,11 @@ define( 'SNIPPET_PRESS_URL', plugin_dir_url( __FILE__ ) );
  */
 spl_autoload_register(
     static function ( $class ) {
-        if ( 0 !== strpos( $class, 'SnippetVault\\' ) ) {
+        if ( 0 !== strpos( $class, 'SnippetPress\\' ) ) {
             return;
         }
 
-        $path = str_replace( [ 'SnippetVault\\', '\\' ], [ '', DIRECTORY_SEPARATOR ], $class );
+        $path = str_replace( [ 'SnippetPress\\', '\\' ], [ '', DIRECTORY_SEPARATOR ], $class );
         $file = SNIPPET_PRESS_DIR . 'includes' . DIRECTORY_SEPARATOR . $path . '.php';
 
         if ( file_exists( $file ) ) {
@@ -46,11 +46,11 @@ require_once SNIPPET_PRESS_DIR . 'includes' . DIRECTORY_SEPARATOR . 'Plugin.php'
 add_action(
     'plugins_loaded',
     static function () {
-        $plugin = SnippetVault\Plugin::instance();
+        $plugin = SnippetPress\Plugin::instance();
         $plugin->boot();
     },
     5
 );
 
-register_activation_hook( __FILE__, [ 'SnippetVault\\Plugin', 'activate' ] );
-register_deactivation_hook( __FILE__, [ 'SnippetVault\\Plugin', 'deactivate' ] );
+register_activation_hook( __FILE__, [ 'SnippetPress\Plugin', 'activate' ] );
+register_deactivation_hook( __FILE__, [ 'SnippetPress\Plugin', 'deactivate' ] );

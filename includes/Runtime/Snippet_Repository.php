@@ -1,9 +1,9 @@
 <?php
 
-namespace SnippetVault\Runtime;
+namespace SnippetPress\Runtime;
 
-use SnippetVault\Infrastructure\Settings;
-use SnippetVault\Post_Types\Snippet_Post_Type;
+use SnippetPress\Infrastructure\Settings;
+use SnippetPress\Post_Types\Snippet_Post_Type;
 
 /**
  * Provides access to snippet data for runtime execution.
@@ -93,3 +93,4 @@ class Snippet_Repository {
         ];
     }
 }
+

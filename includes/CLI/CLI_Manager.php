@@ -1,8 +1,8 @@
 <?php
 
-namespace SnippetVault\CLI;
+namespace SnippetPress\CLI;
 
-use SnippetVault\Infrastructure\Service_Provider;
+use SnippetPress\Infrastructure\Service_Provider;
 
 /**
  * Registers WP-CLI commands.
@@ -14,3 +14,4 @@ class CLI_Manager extends Service_Provider {
         }
     }
 }
+

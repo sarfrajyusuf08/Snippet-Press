@@ -1,9 +1,9 @@
 <?php
 
-namespace SnippetVault\Lint;
+namespace SnippetPress\Lint;
 
-use SnippetVault\Infrastructure\Service_Provider;
-use SnippetVault\Post_Types\Snippet_Post_Type;
+use SnippetPress\Infrastructure\Service_Provider;
+use SnippetPress\Post_Types\Snippet_Post_Type;
 
 /**
  * Performs lightweight linting for snippets upon save.
@@ -42,3 +42,4 @@ class Lint_Manager extends Service_Provider {
         do_action( 'snippet_press/static_lint_executed', $post_id, $type, $content );
     }
 }
+

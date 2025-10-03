@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Infrastructure;
+namespace SnippetPress\Infrastructure;
 
 /**
  * Lightweight service container to manage plugin services.
@@ -45,3 +45,4 @@ class Service_Container {
         return $this->services;
     }
 }
+

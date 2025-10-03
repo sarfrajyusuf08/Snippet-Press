@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Runtime;
+namespace SnippetPress\Runtime;
 
 /**
  * Manages enqueuing JavaScript and CSS snippets across scopes.
@@ -40,3 +40,4 @@ class Assets_Manager {
         wp_add_inline_style( $handle, $css );
     }
 }
+

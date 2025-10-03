@@ -1,9 +1,9 @@
 <?php
 
-namespace SnippetVault;
+namespace SnippetPress;
 
-use SnippetVault\Infrastructure\Service_Container;
-use SnippetVault\Infrastructure\Service_Provider;
+use SnippetPress\Infrastructure\Service_Container;
+use SnippetPress\Infrastructure\Service_Provider;
 
 /**
  * Core plugin bootstrap.
@@ -115,3 +115,7 @@ class Plugin {
         return $this->container;
     }
 }
+
+
+
+

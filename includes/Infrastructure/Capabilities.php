@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Infrastructure;
+namespace SnippetPress\Infrastructure;
 
 use WP_Role;
 
@@ -52,3 +52,4 @@ class Capabilities extends Service_Provider {
         }
     }
 }
+

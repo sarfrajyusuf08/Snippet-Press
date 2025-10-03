@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Infrastructure;
+namespace SnippetPress\Infrastructure;
 
 /**
  * Contract for services managed by the container.
@@ -29,3 +29,4 @@ abstract class Service_Provider {
         return $this->container;
     }
 }
+

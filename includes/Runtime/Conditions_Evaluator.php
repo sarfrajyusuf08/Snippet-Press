@@ -1,6 +1,6 @@
 <?php
 
-namespace SnippetVault\Runtime;
+namespace SnippetPress\Runtime;
 
 /**
  * Evaluates snippet conditions against current request.
@@ -25,3 +25,4 @@ class Conditions_Evaluator {
         }
     }
 }
+
