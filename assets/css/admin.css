@@ -928,19 +928,6 @@
     font-size: 13px;
 }
 
-@media (max-width: 782px) {
-        width: 100%;
-    }
-
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-        width: 100%;
-        text-align: center;
-    }
-}
 
     align-items: flex-start;
     gap: 16px;
@@ -975,23 +962,24 @@
     margin: 0;
 }
 
-@media (max-width: 782px) {
-        flex-direction: column;
-        align-items: stretch;
-    }
 
-        width: 100%;
-    }
 
-        width: 100%;
-        flex-direction: column;
-        align-items: stretch;
-    }
 
-        width: 100%;
-        justify-content: center;
-    }
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .sp-panel__header--file {
     align-items: flex-start;

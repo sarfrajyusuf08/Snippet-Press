@@ -13,7 +13,7 @@ use WP_Error;
  */
 class File_Editor_Page extends Abstract_Admin_Page {
     /**
-     * File manager service.
+     * File manager service instance.
      *
      * @var File_Manager
      */
@@ -22,6 +22,11 @@ class File_Editor_Page extends Abstract_Admin_Page {
     public function __construct( Service_Container $container ) {
         parent::__construct( $container );
         $this->files = new File_Manager();
+    }
+
+    public function register(): void {
+        add_action( 'admin_post_sp_file_editor', [ $this, 'handle_post_action' ] );
+        add_action( 'admin_init', [ $this, 'handle_download_request' ] );
     }
 
     public function slug(): string {
@@ -39,9 +44,9 @@ class File_Editor_Page extends Abstract_Admin_Page {
     public function render(): void {
         $this->assert_capability( $this->capability() );
 
-        $file_definitions = $this->files->all();
+        $definitions = $this->files->all();
 
-        if ( empty( $file_definitions ) ) {
+        if ( empty( $definitions ) ) {
             echo '<div class="wrap sp-file-editor-page">';
             echo '<h1 class="wp-heading-inline">' . esc_html( $this->title() ) . '</h1>';
             echo '<hr class="wp-header-end">';
@@ -50,50 +55,38 @@ class File_Editor_Page extends Abstract_Admin_Page {
             return;
         }
 
-        $this->maybe_handle_download( $file_definitions );
-        $this->maybe_handle_post( $file_definitions );
-
         $requested = isset( $_GET['file'] ) ? sanitize_key( wp_unslash( $_GET['file'] ) ) : '';
-        $active    = isset( $file_definitions[ $requested ] ) ? $requested : array_key_first( $file_definitions );
+        $active    = isset( $definitions[ $requested ] ) ? $requested : array_key_first( $definitions );
 
-        $active_state = $this->files->read( $active );
+        $state = $this->files->read( $active );
 
         echo '<div class="wrap sp-file-editor-page">';
         echo '<h1 class="wp-heading-inline">' . esc_html( $this->title() ) . '</h1>';
         echo '<hr class="wp-header-end">';
 
-        $this->render_tabs( $file_definitions, $active );
-        $this->render_editor_panel( $active, $file_definitions[ $active ], $active_state );
+        $this->render_tabs( $definitions, $active );
+        $this->render_editor_panel( $active, $definitions[ $active ], $state );
         echo '</div>';
     }
 
-    /**
-     * Handle form submissions (save / restore).
-     */
-    private function maybe_handle_post( array $file_definitions ): void {
-        if ( 'POST' !== $_SERVER['REQUEST_METHOD'] ) {
-            return;
-        }
+    public function handle_post_action(): void {
+        $this->assert_capability( $this->capability() );
 
-        $action = isset( $_POST['sp_file_editor_action'] ) ? sanitize_key( wp_unslash( $_POST['sp_file_editor_action'] ) ) : '';
+        $definitions = $this->files->all();
+        $slug        = isset( $_POST['sp_file_slug'] ) ? sanitize_key( wp_unslash( $_POST['sp_file_slug'] ) ) : '';
+        $action      = isset( $_POST['sp_file_editor_action'] ) ? sanitize_key( wp_unslash( $_POST['sp_file_editor_action'] ) ) : 'save';
 
-        if ( ! in_array( $action, [ 'save', 'restore' ], true ) ) {
-            return;
-        }
-
-        check_admin_referer( 'sp_file_editor_save', 'sp_file_editor_nonce' );
-
-        $slug = isset( $_POST['sp_file_slug'] ) ? sanitize_key( wp_unslash( $_POST['sp_file_slug'] ) ) : '';
-
-        if ( ! isset( $file_definitions[ $slug ] ) ) {
+        if ( ! isset( $definitions[ $slug ] ) ) {
             Notices::add( __( 'Invalid file selection.', 'snippet-press' ), 'error' );
             $this->redirect_after_action();
         }
 
         if ( 'restore' === $action ) {
+            check_admin_referer( 'sp_file_editor_restore', 'sp_file_editor_restore_nonce' );
+
             $default = $this->files->default_content( $slug );
 
-            if ( null === $default ) {
+            if ( null === $default || '' === trim( (string) $default ) ) {
                 Notices::add( __( 'No default content is available for this file.', 'snippet-press' ), 'error' );
                 $this->redirect_after_action( $slug );
             }
@@ -109,9 +102,10 @@ class File_Editor_Page extends Abstract_Admin_Page {
             $this->redirect_after_action( $slug );
         }
 
-        $raw_content = isset( $_POST['sp_file_contents'] ) ? wp_unslash( $_POST['sp_file_contents'] ) : '';
+        check_admin_referer( 'sp_file_editor_save', 'sp_file_editor_nonce' );
 
-        $result = $this->files->save( $slug, $raw_content );
+        $raw_content = isset( $_POST['sp_file_contents'] ) ? wp_unslash( $_POST['sp_file_contents'] ) : '';
+        $result      = $this->files->save( $slug, $raw_content );
 
         if ( is_wp_error( $result ) ) {
             $this->handle_error_notice( $result );
@@ -122,18 +116,22 @@ class File_Editor_Page extends Abstract_Admin_Page {
         $this->redirect_after_action( $slug );
     }
 
-    /**
-     * Handle download action via GET.
-     */
-    private function maybe_handle_download( array $file_definitions ): void {
+    public function handle_download_request(): void {
+        if ( ! isset( $_GET['page'] ) || $this->slug() !== sanitize_key( wp_unslash( $_GET['page'] ) ) ) {
+            return;
+        }
+
         if ( ! isset( $_GET['sp_file_action'] ) || 'download' !== sanitize_key( wp_unslash( $_GET['sp_file_action'] ) ) ) {
             return;
         }
 
-        $slug  = isset( $_GET['file'] ) ? sanitize_key( wp_unslash( $_GET['file'] ) ) : '';
-        $nonce = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+        $this->assert_capability( $this->capability() );
 
-        if ( ! isset( $file_definitions[ $slug ] ) ) {
+        $definitions = $this->files->all();
+        $slug        = isset( $_GET['file'] ) ? sanitize_key( wp_unslash( $_GET['file'] ) ) : '';
+        $nonce       = isset( $_GET['_wpnonce'] ) ? sanitize_text_field( wp_unslash( $_GET['_wpnonce'] ) ) : '';
+
+        if ( ! isset( $definitions[ $slug ] ) ) {
             Notices::add( __( 'Invalid file selection.', 'snippet-press' ), 'error' );
             $this->redirect_after_action();
         }
@@ -146,23 +144,22 @@ class File_Editor_Page extends Abstract_Admin_Page {
         $content  = (string) ( $state['content'] ?? '' );
         $fallback = (string) ( $state['default'] ?? '' );
 
-        if ( '' === $content && '' !== $fallback ) {
+        if ( '' === trim( $content ) && '' !== trim( $fallback ) ) {
             $content = $fallback;
         }
 
-        if ( '' === $content ) {
+        if ( '' === trim( $content ) ) {
             Notices::add( __( 'No content is available for download.', 'snippet-press' ), 'error' );
             $this->redirect_after_action( $slug );
         }
 
-        $definition = $file_definitions[ $slug ];
-        $filename   = sanitize_file_name( $definition['label'] ?? ( $slug . '.txt' ) );
+        $label    = $definitions[ $slug ]['label'] ?? ( $slug . '.txt' );
+        $filename = sanitize_file_name( $label );
 
         nocache_headers();
         header( 'Content-Type: text/plain; charset=utf-8' );
         header( 'Content-Disposition: attachment; filename="' . $filename . '"' );
         header( 'Content-Length: ' . strlen( $content ) );
-
         echo $content;
         exit;
     }
@@ -179,12 +176,20 @@ class File_Editor_Page extends Abstract_Admin_Page {
             $args['file'] = $slug;
         }
 
-        wp_safe_redirect( add_query_arg( $args, admin_url( 'admin.php' ) ) );
+        $url = add_query_arg( $args, admin_url( 'admin.php' ) );
+
+        if ( headers_sent() ) {
+            printf( '<script>window.location.href = %s;</script>', wp_json_encode( $url ) );
+            printf( '<noscript><meta http-equiv="refresh" content="0;url=%s"></noscript>', esc_url( $url ) );
+            exit;
+        }
+
+        wp_safe_redirect( $url );
         exit;
     }
 
     /**
-     * Render the primary file tabs.
+     * Render tab navigation.
      *
      * @param array<string,array> $files
      */
@@ -207,15 +212,15 @@ class File_Editor_Page extends Abstract_Admin_Page {
     }
 
     /**
-     * Render the editor panel.
+     * Render the editor panel for the active file.
      *
      * @param string               $slug
-     * @param array<string,string> $file
+     * @param array<string,string> $definition
      * @param array<string,mixed>  $state
      */
-    protected function render_editor_panel( string $slug, array $file, array $state ): void {
+    protected function render_editor_panel( string $slug, array $definition, array $state ): void {
         $writable = ! empty( $state['writable'] );
-        $path     = $state['path'] ?? '';
+        $path     = (string) ( $state['path'] ?? '' );
         $exists   = ! empty( $state['exists'] );
         $size     = $state['size'] ?? null;
         $modified = $state['modified'] ?? null;
@@ -225,7 +230,7 @@ class File_Editor_Page extends Abstract_Admin_Page {
         echo '<div class="sp-panel sp-panel--editor">';
         echo '<header class="sp-panel__header sp-panel__header--file">';
         echo '<div class="sp-panel__title">';
-        echo '<h2>' . esc_html( $file['label'] ) . '</h2>';
+        echo '<h2>' . esc_html( $definition['label'] ) . '</h2>';
         if ( ! $writable ) {
             echo '<span class="sp-badge sp-badge--soon">' . esc_html__( 'Read Only', 'snippet-press' ) . '</span>';
         }
@@ -234,8 +239,8 @@ class File_Editor_Page extends Abstract_Admin_Page {
         echo '</header>';
 
         echo '<div class="sp-panel__body">';
-        if ( ! empty( $file['description'] ) ) {
-            echo '<p>' . esc_html( $file['description'] ) . '</p>';
+        if ( ! empty( $definition['description'] ) ) {
+            echo '<p>' . esc_html( $definition['description'] ) . '</p>';
         }
 
         echo '<ul class="sp-file-editor__meta">';
@@ -254,12 +259,13 @@ class File_Editor_Page extends Abstract_Admin_Page {
             echo '<div class="notice notice-warning inline"><p>' . esc_html__( 'This file is not currently writable. Update file permissions or contact your host to enable editing.', 'snippet-press' ) . '</p></div>';
         }
 
-        echo '<form method="post" class="sp-file-editor__form">';
+        echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="sp-file-editor__form">';
         wp_nonce_field( 'sp_file_editor_save', 'sp_file_editor_nonce' );
+        echo '<input type="hidden" name="action" value="sp_file_editor">';
         echo '<input type="hidden" name="sp_file_editor_action" value="save">';
         echo '<input type="hidden" name="sp_file_slug" value="' . esc_attr( $slug ) . '">';
 
-        if ( '' === $content && ! empty( $state['default'] ) ) {
+        if ( '' === trim( $content ) && ! empty( $state['default'] ) ) {
             $content = (string) $state['default'];
         }
 
@@ -280,14 +286,22 @@ class File_Editor_Page extends Abstract_Admin_Page {
     }
 
     private function render_quick_actions( string $slug, array $state ): string {
-        $download_enabled = ! empty( $state['exists'] );
-        $restore_enabled  = ( '' !== trim( (string) ( $state['default'] ?? '' ) ) ) && ! empty( $state['writable'] );
-        $download_url     = $download_enabled
-            ? wp_nonce_url( add_query_arg( [
-                'page'           => $this->slug(),
-                'file'           => $slug,
-                'sp_file_action' => 'download',
-            ], admin_url( 'admin.php' ) ), 'sp_file_editor_download_' . $slug )
+        $exists           = ! empty( $state['exists'] );
+        $download_enabled = $exists || '' !== trim( (string) ( $state['content'] ?? '' ) ) || '' !== trim( (string) ( $state['default'] ?? '' ) );
+        $restore_enabled  = '' !== trim( (string) ( $state['default'] ?? '' ) ) && ! empty( $state['writable'] );
+
+        $download_url = $download_enabled
+            ? wp_nonce_url(
+                add_query_arg(
+                    [
+                        'page'           => $this->slug(),
+                        'file'           => $slug,
+                        'sp_file_action' => 'download',
+                    ],
+                    admin_url( 'admin.php' )
+                ),
+                'sp_file_editor_download_' . $slug
+            )
             : '';
 
         $confirm_message = esc_js( __( 'Restore the default content for this file? This will overwrite the current contents.', 'snippet-press' ) );
@@ -304,8 +318,9 @@ class File_Editor_Page extends Abstract_Admin_Page {
         }
 
         if ( $restore_enabled ) {
-            echo '<form method="post" class="sp-quick-actions-card__form">';
-            echo wp_nonce_field( 'sp_file_editor_save', 'sp_file_editor_nonce', true, false );
+            echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="sp-quick-actions-card__form">';
+            wp_nonce_field( 'sp_file_editor_restore', 'sp_file_editor_restore_nonce' );
+            echo '<input type="hidden" name="action" value="sp_file_editor">';
             echo '<input type="hidden" name="sp_file_editor_action" value="restore">';
             echo '<input type="hidden" name="sp_file_slug" value="' . esc_attr( $slug ) . '">';
             echo '<button type="submit" class="button button-secondary" onclick="return confirm(\'' . $confirm_message . '\');">' . esc_html__( 'Restore Default', 'snippet-press' ) . '</button>';
@@ -317,6 +332,6 @@ class File_Editor_Page extends Abstract_Admin_Page {
         echo '</div>';
         echo '</div>';
 
-        return ob_get_clean();
+        return (string) ob_get_clean();
     }
 }
