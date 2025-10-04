@@ -152,7 +152,7 @@
 }
 
 .sp-template-group-heading {
-    margin: 2rem 0 0.75rem;
+    margin: 0.75rem 0 0.75rem;
     font-size: 1.3rem;
 }
 
@@ -160,7 +160,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: 1.5rem;
-    margin-bottom: 2rem;
+    /* margin-bottom: 2rem; */
+    margin-bottom: 60px;
 }
 
 .sp-template-card {
@@ -309,7 +310,7 @@
 }
 
 .sp-library-note {
-    margin: 16px 0 32px;
+    margin: 16px 0 16px;
     padding: 16px 20px;
     border-radius: 6px;
     border-left: 4px solid #3858e9;
@@ -322,16 +323,6 @@
     background: #e2e8f0;
     padding: 0 4px;
     border-radius: 4px;
-    white-space: normal;
-    /* allow wrapping */
-    overflow-wrap: anywhere;
-    /* break long words/paths */
-    word-break: break-word;
-    /* fallback for older browsers */
-    display: inline-block;
-    /* ensures it respects wrapping inside */
-    max-width: 100%;
-    /* prevents overflowing container */
 }
 
 .sp-template-section+.sp-template-section {
