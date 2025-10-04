@@ -123,7 +123,7 @@ class Library_View {
 
         echo '<section class="sp-template-section">';
         echo '<h2 class="sp-template-group-heading">' . esc_html__( 'Browse Snippet Library', 'snippet-press' ) . '</h2>';
-        echo '<div class="sp-template-grid">';
+        echo '<div class="sp-template-grid" data-snippet-grid="true">';
 
         foreach ( $snippets as $snippet ) {
             if ( ! is_array( $snippet ) ) {
@@ -133,6 +133,10 @@ class Library_View {
             $this->card_renderer->render( $snippet, $tag_labels );
         }
 
+        echo '</div>';
+        echo '<div class="sp-empty-panel sp-empty-panel--library">';
+        echo '<h3>' . esc_html__( 'No snippets match your filters yet.', 'snippet-press' ) . '</h3>';
+        echo '<p>' . esc_html__( 'Try adjusting your search term or clearing filters to see more results.', 'snippet-press' ) . '</p>';
         echo '</div>';
         echo '</section>';
         echo '</div>';
@@ -191,3 +195,5 @@ class Library_View {
         echo '</section>';
     }
 }
+
+

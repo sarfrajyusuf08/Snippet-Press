@@ -43,6 +43,7 @@ class Snippet_Card_Renderer {
 
         $description = isset( $snippet['description'] ) ? wp_strip_all_tags( (string) $snippet['description'] ) : '';
         $type        = isset( $snippet['type'] ) ? strtoupper( (string) $snippet['type'] ) : '';
+        $type_slug   = isset( $snippet['type'] ) ? sanitize_key( (string) $snippet['type'] ) : '';
         $scopes      = ! empty( $snippet['scopes'] ) ? array_map( [ $this->humanizer, 'from_slug' ], (array) $snippet['scopes'] ) : [];
 
         $meta_parts = array_filter(
@@ -52,13 +53,44 @@ class Snippet_Card_Renderer {
             )
         );
 
-        $status     = isset( $snippet['status'] ) ? (string) $snippet['status'] : 'available';
-        $slug_value = isset( $snippet['slug'] ) ? (string) $snippet['slug'] : '';
+        $status       = isset( $snippet['status'] ) ? sanitize_key( (string) $snippet['status'] ) : 'disabled';
+        $status_label = $this->status_badge->render( $status );
+        $slug_value   = isset( $snippet['slug'] ) ? (string) $snippet['slug'] : '';
+        $category     = isset( $snippet['category'] ) ? sanitize_key( (string) $snippet['category'] ) : '';
+        $tags         = array_values( array_filter( array_map( 'sanitize_key', (array) ( $snippet['tags'] ?? [] ) ) ) );
 
-        echo '<div class="sp-template-card" data-snippet-slug="' . esc_attr( $slug_value ) . '">';
+        $search_pieces = [];
+        $search_pieces[] = $title;
+        $search_pieces[] = $description;
+
+        if ( ! empty( $snippet['highlights'] ) && is_array( $snippet['highlights'] ) ) {
+            foreach ( $snippet['highlights'] as $highlight ) {
+                $search_pieces[] = wp_strip_all_tags( (string) $highlight );
+            }
+        }
+
+        foreach ( $tags as $tag_slug ) {
+            $search_pieces[] = $tag_slug;
+            if ( isset( $tag_labels[ $tag_slug ] ) ) {
+                $search_pieces[] = $tag_labels[ $tag_slug ];
+            }
+        }
+
+        foreach ( (array) $scopes as $scope_label ) {
+            $search_pieces[] = $scope_label;
+        }
+
+        if ( $type ) {
+            $search_pieces[] = $type;
+        }
+
+        $search_blob = strtolower( trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( implode( ' ', array_filter( $search_pieces ) ) ) ) ) );
+        $tags_attr   = implode( ',', $tags );
+
+        echo '<div class="sp-template-card" data-snippet="true" data-snippet-slug="' . esc_attr( $slug_value ) . '" data-category="' . esc_attr( $category ) . '" data-type="' . esc_attr( $type_slug ) . '" data-status="' . esc_attr( $status ) . '" data-tags="' . esc_attr( $tags_attr ) . '" data-search="' . esc_attr( $search_blob ) . '">';
         echo '<div class="sp-template-card__header">';
         echo '<h3>' . esc_html( $title ) . '</h3>';
-        echo $this->status_badge->render( $status );
+        echo $status_label;
         echo '</div>';
 
         if ( ! empty( $meta_parts ) ) {
@@ -92,4 +124,3 @@ class Snippet_Card_Renderer {
         echo '</div>';
     }
 }
-

@@ -843,3 +843,12 @@
     min-width: 90px;
     font-weight: 600;
 }
+.sp-empty-panel--library {
+    display: none;
+    margin-top: 16px;
+}
+
+.sp-empty-panel--library.is-visible {
+    display: block;
+}
+

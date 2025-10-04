@@ -87,4 +87,110 @@
             showError(errorText);
         });
     });
+
+    function initLibraryFilters() {
+        var $cards = $('.sp-template-card[data-snippet="true"]');
+
+        if (!$cards.length) {
+            return;
+        }
+
+        var $searchInput = $('.sp-library-search');
+        var $filters = $('.sp-library-filter');
+        var $emptyState = $('.sp-empty-panel--library');
+        var activeFilter = 'all';
+        var searchTerm = '';
+
+        function matchesFilter($card) {
+            if (!activeFilter || activeFilter === 'all') {
+                return true;
+            }
+
+            if (activeFilter === 'available') {
+                return ($card.data('status') === 'disabled');
+            }
+
+            if (activeFilter.indexOf('type-') === 0) {
+                return ($card.data('type') || '') === activeFilter.slice(5);
+            }
+
+            if (activeFilter.indexOf('category-') === 0) {
+                return ($card.data('category') || '') === activeFilter.slice(9);
+            }
+
+            if (activeFilter.indexOf('tag-') === 0) {
+                var tagList = ($card.data('tags') || '').toString();
+                if (!tagList) {
+                    return false;
+                }
+
+                var tags = tagList.split(',');
+                return tags.indexOf(activeFilter.slice(4)) !== -1;
+            }
+
+            return true;
+        }
+
+        function matchesSearch($card) {
+            if (!searchTerm) {
+                return true;
+            }
+
+            var haystack = ($card.data('search') || '').toString();
+            return haystack.indexOf(searchTerm) !== -1;
+        }
+
+        function applyFilters() {
+            var visibleCount = 0;
+
+            $cards.each(function () {
+                var $card = $(this);
+                var isVisible = matchesFilter($card) && matchesSearch($card);
+                $card.toggle(isVisible);
+
+                if (isVisible) {
+                    visibleCount++;
+                }
+            });
+
+            if ($emptyState.length) {
+                if (visibleCount === 0) {
+                    $emptyState.addClass('is-visible');
+                } else {
+                    $emptyState.removeClass('is-visible');
+                }
+            }
+        }
+
+        $searchInput.on('input', function () {
+            searchTerm = $.trim($(this).val()).toLowerCase();
+            applyFilters();
+        });
+
+        $filters.on('click', function (event) {
+            event.preventDefault();
+
+            var $link = $(this);
+            activeFilter = $link.data('filter') || 'all';
+
+            $filters.removeClass('is-active');
+            $link.addClass('is-active');
+
+            applyFilters();
+        });
+
+        var $initialFilter = $filters.filter('.is-active').first();
+        if ($initialFilter.length) {
+            activeFilter = $initialFilter.data('filter') || 'all';
+        }
+
+        if ($searchInput.length) {
+            searchTerm = $.trim($searchInput.val()).toLowerCase();
+        }
+
+        applyFilters();
+    }
+
+    $(initLibraryFilters);
 })(window, document, jQuery);
+
