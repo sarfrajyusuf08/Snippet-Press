@@ -42,6 +42,8 @@ class Runtime_Manager extends Service_Provider {
         add_action( 'login_enqueue_scripts', [ $this, 'enqueue_login_assets' ], 5 );
         add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ], 5 );
         add_action( 'wp_head', [ $this, 'output_header_injection' ], 1 );
+        add_action( 'wp_footer', [ $this, 'execute_inline_snippets' ], 99 );
+
 
         if ( function_exists( 'wp_body_open' ) ) {
             add_action( 'wp_body_open', [ $this, 'output_body_injection' ], 5 );
@@ -227,4 +229,72 @@ class Runtime_Manager extends Service_Provider {
 
         return is_array( $state ) && ! empty( $state['enabled'] );
     }
+
+    /**
+     * Execute inline snippets for JS and CSS types safely.
+     * This ensures non-PHP snippets are not sent through Php_Executor.
+     */
+    public function execute_inline_snippets(): void {
+        if ( $this->is_safe_mode_active() ) {
+            return;
+        }
+
+        // Get enabled JS and CSS snippets
+        $js_snippets  = $this->repository->get_snippets_by_type( 'js' );
+        $css_snippets = $this->repository->get_snippets_by_type( 'css' );
+
+        // Output JS snippets
+        foreach ( $js_snippets as $snippet ) {
+            if ( ! $this->conditions->matches( $snippet ) || ! $this->scope_allows( $snippet ) ) {
+                continue;
+            }
+
+            $content = $this->prepare_inline_content( $snippet['content'] );
+
+            if ( '' === $content ) {
+                continue;
+            }
+
+            $slug = $snippet['slug'] ?? 'snippet-' . $snippet['id'];
+
+            echo '<script id="snippet-press-js-' . esc_attr( $slug ) . '-after">';
+            echo $content;
+            echo '</script>';
+        }
+
+        // Output CSS snippets
+        foreach ( $css_snippets as $snippet ) {
+            if ( ! $this->conditions->matches( $snippet ) || ! $this->scope_allows( $snippet ) ) {
+                continue;
+            }
+
+            $content = $this->prepare_inline_content( $snippet['content'] );
+
+            if ( '' === $content ) {
+                continue;
+            }
+
+            $slug = $snippet['slug'] ?? 'snippet-' . $snippet['id'];
+
+            echo '<style id="snippet-press-css-' . esc_attr( $slug ) . '-after">';
+            echo $content;
+            echo '</style>';
+        }
+    }
+
+    /**
+     * Clean inline snippet content prior to output.
+     */
+    private function prepare_inline_content( string $content ): string {
+        $content = html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        $content = (string) preg_replace( '/<br\s*\/?>/i', "\n", $content );
+        $content = (string) preg_replace( '/<\?php\s*/i', '', $content );
+        $content = (string) preg_replace( '/\?>/i', '', $content );
+
+        return trim( $content );
+    }
 }
+
+
+
+

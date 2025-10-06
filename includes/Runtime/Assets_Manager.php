@@ -12,11 +12,56 @@ class Assets_Manager {
                 continue;
             }
 
-            $handle = sprintf( 'snippet-press-js-%d', $snippet['id'] );
+            $handle  = sprintf( 'snippet-press-js-%d', $snippet['id'] );
+            $content = $this->prepare_js_content( $snippet['content'] );
+
+            if ( '' === $content ) {
+                continue;
+            }
+
             wp_register_script( $handle, false, [], SNIPPET_PRESS_VERSION, true );
             wp_enqueue_script( $handle );
-            wp_add_inline_script( $handle, $snippet['content'] );
+            wp_add_inline_script( $handle, $content );
         }
+    }
+
+    /**
+     * Normalize snippet content for inline JavaScript output.
+     */
+    private function prepare_js_content( string $content ): string {
+        $trimmed = trim( $content );
+
+        if ( '' === $trimmed ) {
+            return '';
+        }
+
+        if ( 0 === stripos( $trimmed, '<script' ) ) {
+            $matches = [];
+            preg_match_all( '#<script\\b[^>]*>(.*?)</script>#is', $trimmed, $matches );
+
+            if ( ! empty( $matches[1] ) ) {
+                $fragments = array_map(
+                    static function ( string $fragment ): string {
+                        return trim( $fragment );
+                    },
+                    $matches[1]
+                );
+
+                $trimmed = implode(
+                    "\n",
+                    array_filter(
+                        $fragments,
+                        static function ( string $fragment ): bool {
+                            return '' !== $fragment;
+                        }
+                    )
+                );
+            } else {
+                $trimmed = (string) preg_replace( '#<script\\b[^>]*>|</script>#i', '', $trimmed );
+            }
+        }
+
+        return trim( $trimmed );
     }
 
     public function enqueue_styles( array $snippets, string $scope ): void {
@@ -40,4 +85,3 @@ class Assets_Manager {
         wp_add_inline_style( $handle, $css );
     }
 }
-

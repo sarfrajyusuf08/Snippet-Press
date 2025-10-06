@@ -35,3 +35,13 @@ PHP,
 The snippet type (`php`, `js`, or `css`) should match the directory you place the file in.
 Once the file is saved it will automatically appear in the Snippet Library list inside
 the WordPress admin. Remove a file to hide it from the library.
+
+* ## Best Practices
+ * - Always write **eval-safe PHP**:
+ *   - Do not close PHP tags (`?>`).
+ *   - Do not place raw HTML or JavaScript directly inside PHP.
+ *   - Use hooks (`add_action`, `add_filter`) and `echo` or `wp_add_inline_script/style`.
+ * - Keep all strings translatable using WordPress i18n functions (`__()` or `_e()`).
+ * - Use unique slugs to avoid conflicts.
+ * - Keep inline code minimal; complex snippets should enqueue files or use functions.
+ *

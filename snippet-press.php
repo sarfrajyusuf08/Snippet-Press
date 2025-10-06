@@ -52,5 +52,52 @@ add_action(
     5
 );
 
+
+// Disable Visual code editor in the plugin
+
+// Only on your plugin pages Visual editor OFF
+add_action('current_screen', function($screen){
+    if ( ! $screen ) return;
+
+    // Add here you Screen id IDs/Slugs where you want to disable the Visual editor
+    // You can find the Screen ID by uncommenting the debugging code below
+    // Example: toplevel_page_sp-code-snippet, snippets_page_sp-code-snippet
+    $my_screens = [
+        'toplevel_page_sp-code-snippet',
+        'sp_snippet'
+    ];
+
+    if ( in_array($screen->id, $my_screens, true) ) {
+        // 1) Rich editor OFF
+        add_filter('user_can_richedit', '__return_false', 99);
+
+        // 2) TinyMCE auto-formatting OFF
+        add_filter('tiny_mce_before_init', function($init){
+            $init['wpautop']               = false;
+            $init['forced_root_block']     = '';
+            $init['force_br_newlines']     = false;
+            $init['force_p_newlines']      = false;
+            $init['convert_newlines_to_brs']= false;
+            return $init;
+        }, 99);
+
+        // 3) wp_editor defaults override (If you use wp_editor)
+        add_filter('wp_editor_settings', function($settings, $editor_id){
+            $settings['tinymce']   = false;
+            $settings['quicktags'] = true;
+            $settings['wpautop']   = false;
+            return $settings;
+        }, 10, 2);
+    }
+});
+
+// Debugging: Current Screen ID check
+/*add_action('current_screen', function($screen){
+     error_log( 'Current Screen ID: ' . $screen->id );
+ });
+*/
+
+
+
 register_activation_hook( __FILE__, [ 'SnippetPress\Plugin', 'activate' ] );
 register_deactivation_hook( __FILE__, [ 'SnippetPress\Plugin', 'deactivate' ] );

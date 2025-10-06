@@ -74,23 +74,36 @@ class Snippet_Repository {
      * Normalize snippet data into array structure.
      */
     protected function normalize_snippet( int $post_id ): array {
-        $scopes = (array) get_post_meta( $post_id, '_sp_scopes', true );
-        $priority = (int) get_post_meta( $post_id, '_sp_priority', true );
+        $scopes         = (array) get_post_meta( $post_id, '_sp_scopes', true );
+        $priority       = (int) get_post_meta( $post_id, '_sp_priority', true );
+        $raw_content    = (string) get_post_field( 'post_content', $post_id );
+        $cleaned_content = $this->clean_content( $raw_content );
 
         return [
-            'id'          => $post_id,
-            'title'       => get_the_title( $post_id ),
-            'type'        => get_post_meta( $post_id, '_sp_type', true ) ?: 'php',
-            'status'      => get_post_meta( $post_id, '_sp_status', true ) ?: 'disabled',
-            'scopes'      => ! empty( $scopes ) ? $scopes : $this->settings->all()['default_scopes'],
-            'priority'    => $priority ?: 10,
-            'conditions'  => (array) get_post_meta( $post_id, '_sp_conditions', true ),
-            'variables'   => (array) get_post_meta( $post_id, '_sp_variables', true ),
-            'content'     => get_post_field( 'post_content', $post_id ),
-            'safe_mode'   => (bool) get_post_meta( $post_id, '_sp_safe_mode_flag', true ),
-            'last_hash'   => (string) get_post_meta( $post_id, '_sp_last_hash', true ),
-            'modified_gmt'=> get_post_modified_time( 'U', true, $post_id ),
+            'id'           => $post_id,
+            'title'        => get_the_title( $post_id ),
+            'type'         => get_post_meta( $post_id, '_sp_type', true ) ?: 'php',
+            'status'       => get_post_meta( $post_id, '_sp_status', true ) ?: 'disabled',
+            'scopes'       => ! empty( $scopes ) ? $scopes : $this->settings->all()['default_scopes'],
+            'priority'     => $priority ?: 10,
+            'conditions'   => (array) get_post_meta( $post_id, '_sp_conditions', true ),
+            'variables'    => (array) get_post_meta( $post_id, '_sp_variables', true ),
+            'content'      => trim( $cleaned_content ),
+            'safe_mode'    => (bool) get_post_meta( $post_id, '_sp_safe_mode_flag', true ),
+            'last_hash'    => (string) get_post_meta( $post_id, '_sp_last_hash', true ),
+            'modified_gmt' => get_post_modified_time( 'U', true, $post_id ),
         ];
     }
-}
 
+    /**
+     * Remove editor artifacts before runtime usage.
+     */
+    private function clean_content( string $content ): string {
+        $content = html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        $content = (string) preg_replace( '/<br\s*\/?>/i', "\n", $content );
+        $content = (string) preg_replace( '/<\?php\s*/i', '', $content );
+        $content = (string) preg_replace( '/\?>/i', '', $content );
+
+        return $content;
+    }
+}
