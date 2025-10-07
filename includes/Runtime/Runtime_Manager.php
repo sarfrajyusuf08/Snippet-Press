@@ -36,12 +36,13 @@ class Runtime_Manager extends Service_Provider {
     }
 
     public function register(): void {
-        add_action( 'plugins_loaded', [ $this, 'execute_php_snippets' ], 100 );
+        add_action( 'wp', [ $this, 'execute_php_snippets' ], 100 );
         add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_frontend_assets' ], 5 );
         add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_admin_assets' ], 5 );
         add_action( 'login_enqueue_scripts', [ $this, 'enqueue_login_assets' ], 5 );
         add_action( 'enqueue_block_editor_assets', [ $this, 'enqueue_editor_assets' ], 5 );
         add_action( 'wp_head', [ $this, 'output_header_injection' ], 1 );
+        add_action( 'wp_head', [ $this, 'execute_inline_snippets' ], 1 );
         add_action( 'wp_footer', [ $this, 'execute_inline_snippets' ], 99 );
 
 
@@ -209,13 +210,26 @@ class Runtime_Manager extends Service_Provider {
             return true;
         }
 
-        $post_id  = get_queried_object_id();
+        $post_id  = 0;
+        if ( function_exists( 'get_queried_object_id' ) && ( did_action( 'wp' ) || did_action( 'admin_init' ) ) ) {
+            $post_id = (int) get_queried_object_id();
+        }
+
         $post_obj = $post_id ? get_post( $post_id ) : null;
 
         if ( ! $post_obj instanceof \WP_Post && isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) {
             $post_obj = $GLOBALS['post'];
             if ( ! $post_id ) {
                 $post_id = $post_obj->ID;
+            }
+        }
+
+        if ( ! $post_obj instanceof \WP_Post && isset( $GLOBALS['wp_query'] ) && $GLOBALS['wp_query'] instanceof \WP_Query ) {
+            $queried = $GLOBALS['wp_query']->get_queried_object();
+
+            if ( $queried instanceof \WP_Post ) {
+                $post_obj = $queried;
+                $post_id  = (int) $post_obj->ID;
             }
         }
 
@@ -378,16 +392,20 @@ class Runtime_Manager extends Service_Provider {
                 continue;
             }
 
-            $content = $this->prepare_inline_content( $snippet['content'] );
+            $content = html_entity_decode( $snippet['content'], ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+            $content = (string) preg_replace( '/<br\s*\/?>/i', "\n", $content );
+            $content = (string) preg_replace( '/<\s*style[^>]*>/i', '', $content );
+            $content = (string) preg_replace( '/<\/\s*style>/i', '', $content );
 
-            if ( '' === $content ) {
+            $cleaned = trim( $content );
+            if ( '' === $cleaned ) {
                 continue;
             }
 
             $slug = $snippet['slug'] ?? 'snippet-' . $snippet['id'];
 
             echo '<style id="snippet-press-css-' . esc_attr( $slug ) . '-after">';
-            echo $content;
+            echo $cleaned;
             echo '</style>';
         }
     }

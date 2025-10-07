@@ -18,11 +18,11 @@ class Code_Snippets_Page extends Abstract_Admin_Page {
     }
 
     public function title(): string {
-        return __( 'Code Snippets', 'snippet-press' );
+        return __( 'Snippet Press', 'snippet-press' );
     }
 
     public function menu_title(): string {
-        return __( 'Code Snippet', 'snippet-press' );
+        return __( 'Snippet Press', 'snippet-press' );
     }
 
     public function capability(): string {
@@ -36,7 +36,7 @@ class Code_Snippets_Page extends Abstract_Admin_Page {
         $list_table->prepare_items();
 
         echo '<div class="wrap">';
-        echo '<h1 class="wp-heading-inline">' . esc_html__( 'Code Snippets', 'snippet-press' ) . '</h1>';
+        echo '<h1 class="wp-heading-inline">' . esc_html__( 'Snippet Press', 'snippet-press' ) . '</h1>';
         echo ' <a href="' . esc_url( admin_url( 'admin.php?page=sp-add-snippet' ) ) . '" class="page-title-action">' . esc_html__( 'Add Snippet', 'snippet-press' ) . '</a>';
         echo '<hr class="wp-header-end" />';
 
