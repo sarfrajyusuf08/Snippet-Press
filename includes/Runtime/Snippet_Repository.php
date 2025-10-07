@@ -77,12 +77,13 @@ class Snippet_Repository {
         $scopes         = (array) get_post_meta( $post_id, '_sp_scopes', true );
         $priority       = (int) get_post_meta( $post_id, '_sp_priority', true );
         $raw_content    = (string) get_post_field( 'post_content', $post_id );
-        $cleaned_content = $this->clean_content( $raw_content );
+        $type           = get_post_meta( $post_id, '_sp_type', true ) ?: 'php';
+        $cleaned_content = $this->clean_content( $raw_content, $type );
 
         return [
             'id'           => $post_id,
             'title'        => get_the_title( $post_id ),
-            'type'         => get_post_meta( $post_id, '_sp_type', true ) ?: 'php',
+            'type'         => $type,
             'status'       => get_post_meta( $post_id, '_sp_status', true ) ?: 'disabled',
             'scopes'       => ! empty( $scopes ) ? $scopes : $this->settings->all()['default_scopes'],
             'priority'     => $priority ?: 10,
@@ -98,12 +99,21 @@ class Snippet_Repository {
     /**
      * Remove editor artifacts before runtime usage.
      */
-    private function clean_content( string $content ): string {
-        $content = html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
-        $content = (string) preg_replace( '/<br\s*\/?>/i', "\n", $content );
-        $content = (string) preg_replace( '/<\?php\s*/i', '', $content );
-        $content = (string) preg_replace( '/\?>/i', '', $content );
+    private function clean_content( string $content, string $type ): string {
+        $decoded    = html_entity_decode( $content, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
+        $normalized = str_replace( [ "\r\n", "\r" ], "\n", $decoded );
 
-        return $content;
+        if ( 'php' === $type ) {
+            return $normalized;
+        }
+
+        $normalized = (string) preg_replace( '/<br\s*\/?>/i', "\n", $normalized );
+        $normalized = (string) preg_replace( '/<\/p>\s*<p>/i', "\n", $normalized );
+        $normalized = str_replace( [ '<p>', '</p>' ], '', $normalized );
+        $normalized = trim( $normalized );
+        $normalized = (string) preg_replace( '/<\?php\s*/i', '', $normalized );
+        $normalized = (string) preg_replace( '/\?>/i', '', $normalized );
+
+        return $normalized;
     }
 }

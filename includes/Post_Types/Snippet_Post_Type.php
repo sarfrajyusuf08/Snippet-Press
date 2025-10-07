@@ -3,6 +3,8 @@
 namespace SnippetPress\Post_Types;
 
 use SnippetPress\Infrastructure\Service_Provider;
+use SnippetPress\Infrastructure\Settings;
+use WP_Post;
 
 /**
  * Registers the Snippet custom post type and related taxonomies/meta.
@@ -21,6 +23,8 @@ class Snippet_Post_Type extends Service_Provider {
         add_filter( 'manage_edit-' . self::POST_TYPE . '_columns', [ $this, 'register_columns' ] );
         add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', [ $this, 'render_column' ], 10, 2 );
         add_filter( 'post_updated_messages', [ $this, 'updated_messages' ] );
+        add_action( 'transition_post_status', [ $this, 'sync_status_meta' ], 10, 3 );
+        add_action( 'save_post_' . self::POST_TYPE, [ $this, 'sync_status_meta_on_save' ], 20, 3 );
     }
 
     /**
@@ -199,6 +203,119 @@ class Snippet_Post_Type extends Service_Provider {
             'default'      => false,
             'show_in_rest' => true,
         ] );
+    }
+
+    /**
+     * Ensure status meta stays synced with WordPress post status transitions.
+     */
+    public function sync_status_meta( string $new_status, string $old_status, $post ): void {
+        if ( ! $post instanceof WP_Post || self::POST_TYPE !== $post->post_type ) {
+            return;
+        }
+
+        if ( wp_is_post_revision( $post->ID ) || wp_is_post_autosave( $post->ID ) ) {
+            return;
+        }
+
+        $this->maybe_update_status_meta( $post, $new_status );
+    }
+
+    /**
+     * Mirror status meta when snippets are saved directly.
+     */
+    public function sync_status_meta_on_save( int $post_id, $post, bool $update ): void {
+        if ( ! $post instanceof WP_Post || self::POST_TYPE !== $post->post_type ) {
+            return;
+        }
+
+        if ( wp_is_post_revision( $post_id ) || wp_is_post_autosave( $post_id ) ) {
+            return;
+        }
+
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            return;
+        }
+
+        $this->maybe_update_status_meta( $post, $post->post_status );
+        $this->ensure_metadata_defaults( $post );
+    }
+
+    /**
+     * Normalize the _sp_status meta field to match the post status.
+     */
+    private function maybe_update_status_meta( WP_Post $post, string $status ): void {
+        if ( 'auto-draft' === $status ) {
+            return;
+        }
+
+        $desired = 'publish' === $status ? 'enabled' : 'disabled';
+        $current = get_post_meta( $post->ID, '_sp_status', true );
+
+        if ( $current !== $desired ) {
+            update_post_meta( $post->ID, '_sp_status', $desired );
+        }
+    }
+
+
+    /**
+     * Ensure newly saved snippets have required meta defaults.
+     */
+    private function ensure_metadata_defaults( WP_Post $post ): void {
+        $post_id = $post->ID;
+
+        if ( '' === get_post_meta( $post_id, '_sp_type', true ) ) {
+            $detected = $this->detect_type_from_content( $post->post_content ?? '' );
+            update_post_meta( $post_id, '_sp_type', $detected );
+        }
+
+        $scopes = get_post_meta( $post_id, '_sp_scopes', true );
+        if ( empty( $scopes ) ) {
+            $settings       = get_option( Settings::OPTION_KEY, [] );
+            $default_scopes = isset( $settings['default_scopes'] ) && is_array( $settings['default_scopes'] ) && ! empty( $settings['default_scopes'] )
+                ? array_values( array_filter( array_map( 'sanitize_key', (array) $settings['default_scopes'] ) ) )
+                : [ 'frontend' ];
+
+            update_post_meta( $post_id, '_sp_scopes', $default_scopes );
+        }
+
+        if ( '' === get_post_meta( $post_id, '_sp_priority', true ) ) {
+            update_post_meta( $post_id, '_sp_priority', 10 );
+        }
+    }
+
+    /**
+     * Attempt to infer snippet type from its content when none supplied.
+     */
+    private function detect_type_from_content( string $content ): string {
+        $trimmed = trim( $content );
+
+        if ( '' === $trimmed ) {
+            return 'php';
+        }
+
+        $lower = strtolower( $trimmed );
+
+        if ( false !== strpos( $lower, '<?php' ) || false !== strpos( $lower, '?>' ) ) {
+            return 'php';
+        }
+
+        if ( false !== strpos( $lower, '<script' ) || preg_match( '/(document|window)/i', $trimmed ) || preg_match( '/addEventListener/i', $trimmed ) ) {
+            return 'js';
+        }
+
+        if ( false !== strpos( $lower, '<style' ) ) {
+            return 'css';
+        }
+
+        if ( preg_match( '/[a-z0-9\.#_-]+\s*\{[^}]+\}/i', $trimmed ) && false === strpos( $lower, '; php' ) && false === strpos( $lower, '<?' ) ) {
+            return 'css';
+        }
+
+        if ( false !== strpos( $trimmed, '<' ) && false !== strpos( $trimmed, '>' ) ) {
+            return 'html';
+        }
+
+        return 'php';
     }
 
     public function register_columns( array $columns ): array {

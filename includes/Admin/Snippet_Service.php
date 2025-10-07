@@ -108,10 +108,22 @@ class Snippet_Service {
                 continue;
             }
 
+            if ( 'trash' === get_post_status( $id ) ) {
+                $deleted = wp_delete_post( $id, true );
+
+                if ( false === $deleted ) {
+                    $result['errors'][] = sprintf( __( 'Failed to permanently delete snippet %d.', 'snippet-press' ), $id );
+                    continue;
+                }
+
+                $result['processed']++;
+                continue;
+            }
+
             $trashed = wp_trash_post( $id );
 
             if ( false === $trashed ) {
-                $result['errors'][] = sprintf( __( 'Failed to delete snippet %d.', 'snippet-press' ), $id );
+                $result['errors'][] = sprintf( __( 'Failed to move snippet %d to the trash.', 'snippet-press' ), $id );
                 continue;
             }
 
