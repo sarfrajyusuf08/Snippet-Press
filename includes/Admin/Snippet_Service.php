@@ -50,13 +50,19 @@ class Snippet_Service {
         }
 
         $type   = isset( $data['type'] ) ? sanitize_key( $data['type'] ) : 'php';
-        $scopes = isset( $data['scopes'] ) ? self::sanitize_scopes( (array) $data['scopes'] ) : [];
+        $allowed_types = [ 'php', 'js', 'css', 'html' ];
+        if ( ! in_array( $type, $allowed_types, true ) ) {
+            $type = 'php';
+        }
+
+        $scopes   = isset( $data['scopes'] ) ? self::sanitize_scopes( (array) $data['scopes'] ) : [];
         $priority = isset( $data['priority'] ) ? (int) $data['priority'] : 10;
 
         update_post_meta( $post_id, '_sp_type', $type );
         update_post_meta( $post_id, '_sp_status', $status );
         update_post_meta( $post_id, '_sp_scopes', $scopes );
         update_post_meta( $post_id, '_sp_priority', $priority );
+        update_post_meta( $post_id, '_sp_scope_rules', '' );
 
         if ( isset( $data['notes'] ) ) {
             update_post_meta( $post_id, '_sp_notes', sanitize_textarea_field( $data['notes'] ) );
@@ -188,6 +194,7 @@ class Snippet_Service {
                 'type'       => get_post_meta( $post->ID, '_sp_type', true ),
                 'status'     => get_post_meta( $post->ID, '_sp_status', true ),
                 'scopes'     => (array) get_post_meta( $post->ID, '_sp_scopes', true ),
+                'scope_rules'=> get_post_meta( $post->ID, '_sp_scope_rules', true ),
                 'priority'   => (int) get_post_meta( $post->ID, '_sp_priority', true ),
                 'conditions' => (array) get_post_meta( $post->ID, '_sp_conditions', true ),
                 'variables'  => (array) get_post_meta( $post->ID, '_sp_variables', true ),
@@ -262,6 +269,7 @@ class Snippet_Service {
             '_sp_safe_mode_flag',
             '_sp_priority',
             '_sp_scopes',
+            '_sp_scope_rules',
             '_sp_conditions',
             '_sp_variables',
             '_sp_last_hash',
@@ -279,9 +287,27 @@ class Snippet_Service {
      * Sanitize scope values.
      */
     protected static function sanitize_scopes( array $scopes ): array {
-        $scopes = array_map( 'sanitize_key', $scopes );
-        $scopes = array_filter( $scopes );
-        return array_values( array_unique( $scopes ) );
+        if ( empty( $scopes ) ) {
+            return [];
+        }
+
+        $allowed = [ 'universal', 'frontend', 'admin', 'login', 'editor', 'rest' ];
+
+        $normalized = array_map(
+            static function ( $scope ) {
+                $scope = sanitize_key( (string) $scope );
+                if ( 'global' === $scope ) {
+                    return 'universal';
+                }
+
+                return $scope;
+            },
+            $scopes
+        );
+
+        $filtered = array_values( array_unique( array_intersect( $normalized, $allowed ) ) );
+
+        return $filtered;
     }
 
     /**

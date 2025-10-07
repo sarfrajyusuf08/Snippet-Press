@@ -172,31 +172,141 @@ class Runtime_Manager extends Service_Provider {
     }
 
     protected function scope_allows( array $snippet ): bool {
-        $scopes     = $snippet['scopes'];
+        $scopes     = array_map( 'sanitize_key', (array) ( $snippet['scopes'] ?? [] ) );
         $doing_ajax = function_exists( 'wp_doing_ajax' ) ? wp_doing_ajax() : ( defined( 'DOING_AJAX' ) && DOING_AJAX );
 
+        if ( in_array( 'global', $scopes, true ) && ! in_array( 'universal', $scopes, true ) ) {
+            $scopes[] = 'universal';
+        }
+
+        $allowed = false;
+
         if ( in_array( 'universal', $scopes, true ) ) {
+            $allowed = true;
+        } elseif ( in_array( 'frontend', $scopes, true ) && ! is_admin() && ! $doing_ajax && ! $this->is_rest_request() ) {
+            $allowed = true;
+        } elseif ( in_array( 'admin', $scopes, true ) && is_admin() && ! $doing_ajax ) {
+            $allowed = true;
+        } elseif ( in_array( 'login', $scopes, true ) && 'login_enqueue_scripts' === current_action() ) {
+            $allowed = true;
+        } elseif ( in_array( 'rest', $scopes, true ) && $this->is_rest_request() ) {
+            $allowed = true;
+        } elseif ( in_array( 'editor', $scopes, true ) && 'enqueue_block_editor_assets' === current_action() ) {
+            $allowed = true;
+        }
+
+        if ( ! $allowed ) {
+            return false;
+        }
+
+        $scope_rules = isset( $snippet['scope_rules'] ) && is_array( $snippet['scope_rules'] ) ? $snippet['scope_rules'] : [];
+
+        return $this->scope_rules_allow( $scope_rules );
+    }
+
+    private function scope_rules_allow( array $rules ): bool {
+        if ( empty( $rules ) ) {
             return true;
         }
 
-        if ( in_array( 'frontend', $scopes, true ) && ! is_admin() && ! $doing_ajax && ! $this->is_rest_request() ) {
-            return true;
+        $post_id  = get_queried_object_id();
+        $post_obj = $post_id ? get_post( $post_id ) : null;
+
+        if ( ! $post_obj instanceof \WP_Post && isset( $GLOBALS['post'] ) && $GLOBALS['post'] instanceof \WP_Post ) {
+            $post_obj = $GLOBALS['post'];
+            if ( ! $post_id ) {
+                $post_id = $post_obj->ID;
+            }
         }
 
-        if ( in_array( 'admin', $scopes, true ) && is_admin() && ! $doing_ajax ) {
-            return true;
+        $post_type = $post_obj instanceof \WP_Post ? $post_obj->post_type : ( $post_id ? get_post_type( $post_id ) : '' );
+
+        if ( ! empty( $rules['include_post_ids'] ) ) {
+            $ids = array_map( 'intval', (array) $rules['include_post_ids'] );
+            if ( ! $post_id || ! in_array( $post_id, $ids, true ) ) {
+                return false;
+            }
         }
 
-        if ( in_array( 'login', $scopes, true ) && 'login_enqueue_scripts' === current_action() ) {
-            return true;
+        if ( ! empty( $rules['exclude_post_ids'] ) && $post_id ) {
+            $ids = array_map( 'intval', (array) $rules['exclude_post_ids'] );
+            if ( in_array( $post_id, $ids, true ) ) {
+                return false;
+            }
         }
 
-        if ( in_array( 'rest', $scopes, true ) && $this->is_rest_request() ) {
-            return true;
+        if ( ! empty( $rules['include_post_types'] ) ) {
+            $types = array_map( 'sanitize_key', (array) $rules['include_post_types'] );
+            if ( ! $post_type || ! in_array( $post_type, $types, true ) ) {
+                return false;
+            }
         }
 
-        if ( in_array( 'editor', $scopes, true ) && 'enqueue_block_editor_assets' === current_action() ) {
-            return true;
+        if ( ! empty( $rules['include_tax_terms'] ) ) {
+            if ( ! $post_id ) {
+                return false;
+            }
+
+            $matches = false;
+
+            foreach ( (array) $rules['include_tax_terms'] as $entry ) {
+                if ( empty( $entry['taxonomy'] ) || empty( $entry['terms'] ) ) {
+                    continue;
+                }
+
+                $taxonomy = sanitize_key( (string) $entry['taxonomy'] );
+                $terms    = array_filter( array_map( 'absint', (array) $entry['terms'] ) );
+
+                if ( '' === $taxonomy || empty( $terms ) ) {
+                    continue;
+                }
+
+                if ( has_term( $terms, $taxonomy, $post_id ) ) {
+                    $matches = true;
+                    break;
+                }
+            }
+
+            if ( ! $matches ) {
+                return false;
+            }
+        }
+
+        if ( ! empty( $rules['url_patterns'] ) ) {
+            $request_uri = isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( (string) $_SERVER['REQUEST_URI'] ) : '';
+
+            if ( '' === $request_uri ) {
+                return false;
+            }
+
+            if ( ! $this->matches_url_patterns( $request_uri, (array) $rules['url_patterns'] ) ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function matches_url_patterns( string $url, array $patterns ): bool {
+        if ( '' === $url ) {
+            return false;
+        }
+
+        $normalized_url = '/' === substr( $url, 0, 1 ) ? $url : '/' . ltrim( $url, '/' );
+
+        foreach ( $patterns as $pattern ) {
+            $pattern = trim( (string) $pattern );
+
+            if ( '' === $pattern ) {
+                continue;
+            }
+
+            $compare = '/' === substr( $pattern, 0, 1 ) ? $pattern : '/' . ltrim( $pattern, '/' );
+            $regex   = '/^' . str_replace( '\\*', '.*', preg_quote( $compare, '/' ) ) . '$/i';
+
+            if ( preg_match( $regex, $normalized_url ) ) {
+                return true;
+            }
         }
 
         return false;

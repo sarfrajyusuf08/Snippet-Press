@@ -4,6 +4,7 @@ namespace SnippetPress\Post_Types;
 
 use SnippetPress\Infrastructure\Service_Provider;
 use SnippetPress\Infrastructure\Settings;
+use SnippetPress\Post_Types\Meta\Snippet_Settings_Metabox;
 use WP_Post;
 
 /**
@@ -13,10 +14,19 @@ class Snippet_Post_Type extends Service_Provider {
     public const POST_TYPE = 'sp_snippet';
     public const TAXONOMY = 'sp_type';
 
+    /** @var Settings|null */
+    protected $settings;
+
+    /** @var Snippet_Settings_Metabox */
+    protected $settings_metabox;
+
     /**
      * Register runtime hooks.
      */
     public function register(): void {
+        $settings_service = $this->container()->get( Settings::class );
+        $this->settings   = $settings_service instanceof Settings ? $settings_service : null;
+
         add_action( 'init', [ $this, 'register_post_type' ] );
         add_action( 'init', [ $this, 'register_taxonomy' ] );
         add_action( 'init', [ $this, 'register_meta' ] );
@@ -25,6 +35,9 @@ class Snippet_Post_Type extends Service_Provider {
         add_filter( 'post_updated_messages', [ $this, 'updated_messages' ] );
         add_action( 'transition_post_status', [ $this, 'sync_status_meta' ], 10, 3 );
         add_action( 'save_post_' . self::POST_TYPE, [ $this, 'sync_status_meta_on_save' ], 20, 3 );
+
+        $this->settings_metabox = new Snippet_Settings_Metabox( $this->settings );
+        $this->settings_metabox->register();
     }
 
     /**
@@ -169,6 +182,13 @@ class Snippet_Post_Type extends Service_Provider {
             ],
         ] );
 
+        register_post_meta( self::POST_TYPE, '_sp_scope_rules', [
+            'type'         => 'string',
+            'single'       => true,
+            'default'      => '',
+            'show_in_rest' => true,
+        ] );
+
         register_post_meta( self::POST_TYPE, '_sp_conditions', [
             'type'         => 'object',
             'single'       => true,
@@ -263,23 +283,29 @@ class Snippet_Post_Type extends Service_Provider {
     private function ensure_metadata_defaults( WP_Post $post ): void {
         $post_id = $post->ID;
 
-        if ( '' === get_post_meta( $post_id, '_sp_type', true ) ) {
+        $stored_type = get_post_meta( $post_id, '_sp_type', true );
+        if ( '' === $stored_type || ! in_array( $stored_type, [ 'php', 'js', 'css', 'html' ], true ) ) {
             $detected = $this->detect_type_from_content( $post->post_content ?? '' );
             update_post_meta( $post_id, '_sp_type', $detected );
         }
 
-        $scopes = get_post_meta( $post_id, '_sp_scopes', true );
+        $scopes = Snippet_Settings_Metabox::sanitize_scopes( (array) get_post_meta( $post_id, '_sp_scopes', true ) );
         if ( empty( $scopes ) ) {
             $settings       = get_option( Settings::OPTION_KEY, [] );
             $default_scopes = isset( $settings['default_scopes'] ) && is_array( $settings['default_scopes'] ) && ! empty( $settings['default_scopes'] )
                 ? array_values( array_filter( array_map( 'sanitize_key', (array) $settings['default_scopes'] ) ) )
                 : [ 'frontend' ];
-
-            update_post_meta( $post_id, '_sp_scopes', $default_scopes );
+            $scopes         = Snippet_Settings_Metabox::sanitize_scopes( $default_scopes );
         }
+        update_post_meta( $post_id, '_sp_scopes', $scopes );
 
         if ( '' === get_post_meta( $post_id, '_sp_priority', true ) ) {
             update_post_meta( $post_id, '_sp_priority', 10 );
+        }
+
+        $rules = get_post_meta( $post_id, '_sp_scope_rules', true );
+        if ( '' === $rules || ! is_string( $rules ) ) {
+            update_post_meta( $post_id, '_sp_scope_rules', '' );
         }
     }
 

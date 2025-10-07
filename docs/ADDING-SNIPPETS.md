@@ -45,3 +45,13 @@ the WordPress admin. Remove a file to hide it from the library.
  * - Use unique slugs to avoid conflicts.
  * - Keep inline code minimal; complex snippets should enqueue files or use functions.
  *
+
+## Manual Snippet Settings
+
+When you add a snippet directly from **Add New → Snippet**, use the **Snippet Settings** panel:
+
+- **Snippet Type** decides how the runtime executes the code (PHP, JavaScript, CSS, or HTML).
+- **Scopes** control where the snippet loads (Global, Frontend, Admin, Login, Editor).
+- **Advanced targeting** accepts comma-separated values (e.g. Post IDs `12,45`, Post Types `post,page`, URL patterns `/shop/*`) and stores them as `_sp_scope_rules`.
+
+Leave any targeting field blank to ignore it. Disabled snippets or missing rules continue to behave exactly as before, so existing snippets keep working without changes.

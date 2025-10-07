@@ -86,6 +86,7 @@ class Snippet_Repository {
             'type'         => $type,
             'status'       => get_post_meta( $post_id, '_sp_status', true ) ?: 'disabled',
             'scopes'       => ! empty( $scopes ) ? $scopes : $this->settings->all()['default_scopes'],
+            'scope_rules'  => $this->get_scope_rules( $post_id ),
             'priority'     => $priority ?: 10,
             'conditions'   => (array) get_post_meta( $post_id, '_sp_conditions', true ),
             'variables'    => (array) get_post_meta( $post_id, '_sp_variables', true ),
@@ -94,6 +95,19 @@ class Snippet_Repository {
             'last_hash'    => (string) get_post_meta( $post_id, '_sp_last_hash', true ),
             'modified_gmt' => get_post_modified_time( 'U', true, $post_id ),
         ];
+    }
+
+    /**
+     * Retrieve and normalize scope rules for runtime usage.
+     */
+    private function get_scope_rules( int $post_id ): array {
+        $raw = get_post_meta( $post_id, '_sp_scope_rules', true );
+        if ( ! is_string( $raw ) || '' === $raw ) {
+            return [];
+        }
+
+        $decoded = json_decode( $raw, true );
+        return is_array( $decoded ) ? $decoded : [];
     }
 
     /**
