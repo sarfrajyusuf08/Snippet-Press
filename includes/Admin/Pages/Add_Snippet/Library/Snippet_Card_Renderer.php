@@ -27,10 +27,9 @@ class Snippet_Card_Renderer {
     /**
      * Render the card markup for an individual library snippet definition.
      *
-     * @param array<string, mixed> $snippet    Snippet metadata from the library.
-     * @param array<string, string> $tag_labels Map of tag slug => label.
+     * @param array<string, mixed> $snippet Snippet metadata from the library.
      */
-    public function render( array $snippet, array $tag_labels ): void {
+    public function render( array $snippet ): void {
         $title = isset( $snippet['title'] ) ? wp_strip_all_tags( (string) $snippet['title'] ) : '';
 
         if ( '' === $title && isset( $snippet['name'] ) ) {
@@ -57,7 +56,6 @@ class Snippet_Card_Renderer {
         $status_label = $this->status_badge->render( $status );
         $slug_value   = isset( $snippet['slug'] ) ? (string) $snippet['slug'] : '';
         $category     = isset( $snippet['category'] ) ? sanitize_key( (string) $snippet['category'] ) : '';
-        $tags         = array_values( array_filter( array_map( 'sanitize_key', (array) ( $snippet['tags'] ?? [] ) ) ) );
 
         $search_pieces = [];
         $search_pieces[] = $title;
@@ -66,13 +64,6 @@ class Snippet_Card_Renderer {
         if ( ! empty( $snippet['highlights'] ) && is_array( $snippet['highlights'] ) ) {
             foreach ( $snippet['highlights'] as $highlight ) {
                 $search_pieces[] = wp_strip_all_tags( (string) $highlight );
-            }
-        }
-
-        foreach ( $tags as $tag_slug ) {
-            $search_pieces[] = $tag_slug;
-            if ( isset( $tag_labels[ $tag_slug ] ) ) {
-                $search_pieces[] = $tag_labels[ $tag_slug ];
             }
         }
 
@@ -85,9 +76,8 @@ class Snippet_Card_Renderer {
         }
 
         $search_blob = strtolower( trim( preg_replace( '/\s+/', ' ', wp_strip_all_tags( implode( ' ', array_filter( $search_pieces ) ) ) ) ) );
-        $tags_attr   = implode( ',', $tags );
 
-        echo '<div class="sp-template-card" data-snippet="true" data-snippet-slug="' . esc_attr( $slug_value ) . '" data-category="' . esc_attr( $category ) . '" data-type="' . esc_attr( $type_slug ) . '" data-status="' . esc_attr( $status ) . '" data-tags="' . esc_attr( $tags_attr ) . '" data-search="' . esc_attr( $search_blob ) . '">';
+        echo '<div class="sp-template-card" data-snippet="true" data-snippet-slug="' . esc_attr( $slug_value ) . '" data-category="' . esc_attr( $category ) . '" data-type="' . esc_attr( $type_slug ) . '" data-status="' . esc_attr( $status ) . '" data-search="' . esc_attr( $search_blob ) . '">';
         echo '<div class="sp-template-card__header">';
         echo '<h3>' . esc_html( $title ) . '</h3>';
         echo $status_label;
@@ -107,15 +97,6 @@ class Snippet_Card_Renderer {
                 echo '<li>' . esc_html( wp_strip_all_tags( (string) $highlight ) ) . '</li>';
             }
             echo '</ul>';
-        }
-
-        if ( ! empty( $snippet['tags'] ) ) {
-            echo '<div class="sp-tags">';
-            foreach ( (array) $snippet['tags'] as $tag_slug ) {
-                $tag_label = isset( $tag_labels[ $tag_slug ] ) ? $tag_labels[ $tag_slug ] : $this->humanizer->from_slug( (string) $tag_slug );
-                echo '<span class="sp-tag">' . esc_html( $tag_label ) . '</span>';
-            }
-            echo '</div>';
         }
 
         echo '<div class="sp-template-actions">';

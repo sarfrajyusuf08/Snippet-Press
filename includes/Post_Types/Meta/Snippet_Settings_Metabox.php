@@ -22,23 +22,13 @@ class Snippet_Settings_Metabox {
     }
 
     public function register(): void {
-        add_action( 'add_meta_boxes', [ $this, 'register_meta_box' ] );
+        add_action( 'edit_form_after_title', [ $this, 'render_editor_panel' ] );
+        add_action( 'add_meta_boxes', [ $this, 'customize_meta_boxes' ], 20 );
         add_action( 'save_post_' . Snippet_Post_Type::POST_TYPE, [ $this, 'save' ], 10, 3 );
     }
 
-    public function register_meta_box(): void {
-        add_meta_box(
-            'sp-snippet-settings',
-            __( 'Snippet Settings', 'snippet-press' ),
-            [ $this, 'render' ],
-            Snippet_Post_Type::POST_TYPE,
-            'side',
-            'default'
-        );
-    }
-
-    public function render( WP_Post $post ): void {
-        if ( ! current_user_can( 'edit_post', $post->ID ) ) {
+    public function render_editor_panel( WP_Post $post ): void {
+        if ( Snippet_Post_Type::POST_TYPE !== $post->post_type || ! current_user_can( 'edit_post', $post->ID ) ) {
             return;
         }
 
@@ -100,66 +90,101 @@ class Snippet_Settings_Metabox {
         $url_placeholder = sprintf( '/blog/*%s/shop/*', PHP_EOL );
 
         ?>
-        <p>
-            <label for="sp-snippet-type"><strong><?php esc_html_e( 'Snippet Type', 'snippet-press' ); ?></strong></label>
-            <select id="sp-snippet-type" name="sp_snippet_type" class="widefat">
-                <?php foreach ( $type_options as $value => $label ) : ?>
-                    <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $type, $value ); ?>>
-                        <?php echo esc_html( $label ); ?>
-                    </option>
-                <?php endforeach; ?>
-            </select>
-        </p>
+        <div class="sp-snippet-editor">
+            <div class="sp-snippet-toolbar">
+                <div class="sp-snippet-toolbar__status">
+                    <span class="sp-snippet-toolbar__status-label"><?php esc_html_e( 'Snippet Status', 'snippet-press' ); ?></span>
+                    <input type="hidden" name="sp_snippet_status" value="disabled" />
+                    <label class="sp-switch">
+                        <input type="checkbox" class="sp-snippet-status-toggle" name="sp_snippet_status" value="enabled" <?php checked( $is_enabled, true ); ?> />
+                        <span class="sp-switch__track" aria-hidden="true"></span>
+                        <span class="sp-switch__text sp-snippet-status-toggle__text" data-active="<?php echo esc_attr( $status_active_label ); ?>" data-inactive="<?php echo esc_attr( $status_inactive_label ); ?>">
+                            <?php echo esc_html( $is_enabled ? $status_active_label : $status_inactive_label ); ?>
+                        </span>
+                    </label>
+                </div>
+                <button type="button" class="button button-primary sp-snippet-toolbar__save"><?php esc_html_e( 'Save Snippet', 'snippet-press' ); ?></button>
+            </div>
 
-        <fieldset>
-            <legend><strong><?php esc_html_e( 'Scopes', 'snippet-press' ); ?></strong></legend>
-            <p class="description"><?php esc_html_e( 'Where should this snippet run?', 'snippet-press' ); ?></p>
-            <?php foreach ( $scope_options as $value => $label ) : ?>
-                <label style="display:block;margin-bottom:4px;">
-                    <input type="checkbox" name="sp_snippet_scopes[]" value="<?php echo esc_attr( $value ); ?>" <?php checked( in_array( $value, $selected_scopes, true ), true ); ?> />
-                    <?php echo esc_html( $label ); ?>
-                </label>
-            <?php endforeach; ?>
-        </fieldset>
+            <div class="sp-snippet-editor__panel">
+                <section class="sp-snippet-editor__section">
+                    <h3 class="sp-snippet-editor__section-title"><?php esc_html_e( 'Code Controls', 'snippet-press' ); ?></h3>
+                    <div class="sp-field">
+                        <label class="sp-field__label" for="sp-snippet-type"><?php esc_html_e( 'Snippet Type', 'snippet-press' ); ?></label>
+                        <select id="sp-snippet-type" name="sp_snippet_type" class="sp-field__control">
+                            <?php foreach ( $type_options as $value => $label ) : ?>
+                                <option value="<?php echo esc_attr( $value ); ?>" <?php selected( $type, $value ); ?>>
+                                    <?php echo esc_html( $label ); ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
 
-        <details style="margin-top:12px;">
-            <summary><strong><?php esc_html_e( 'Advanced targeting', 'snippet-press' ); ?></strong></summary>
-            <p class="description"><?php esc_html_e( 'Optional rules to target or exclude specific locations. Leave blank to ignore.', 'snippet-press' ); ?></p>
+                    <div class="sp-field">
+                        <span class="sp-field__label"><?php esc_html_e( 'Execution Scope', 'snippet-press' ); ?></span>
+                        <p class="sp-field__description"><?php esc_html_e( 'Choose where this snippet should run. You can combine scopes.', 'snippet-press' ); ?></p>
+                        <div class="sp-snippet-scopes">
+                            <?php foreach ( $scope_options as $value => $label ) : ?>
+                                <label class="sp-snippet-scope-option">
+                                    <input type="checkbox" name="sp_snippet_scopes[]" value="<?php echo esc_attr( $value ); ?>" <?php checked( in_array( $value, $selected_scopes, true ), true ); ?> />
+                                    <span><?php echo esc_html( $label ); ?></span>
+                                </label>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                </section>
 
-            <p>
-                <label for="sp-scope-include-ids"><?php esc_html_e( 'Include Post IDs', 'snippet-press' ); ?></label>
-                <input type="text" id="sp-scope-include-ids" class="widefat" name="sp_scope_rules[include_post_ids]" placeholder="<?php esc_attr_e( '12,45,78', 'snippet-press' ); ?>"
-                    value="<?php echo esc_attr( isset( $rules['include_post_ids'] ) ? implode( ',', array_map( 'absint', (array) $rules['include_post_ids'] ) ) : '' ); ?>" />
-            </p>
+                <section class="sp-snippet-editor__section sp-snippet-editor__section--advanced">
+                    <details class="sp-snippet-advanced"<?php echo ! empty( $rules ) ? ' open' : ''; ?>>
+                        <summary><?php esc_html_e( 'Advanced Targeting', 'snippet-press' ); ?></summary>
+                        <p class="sp-field__description"><?php esc_html_e( 'Optional rules to target or exclude specific locations. Leave blank to ignore.', 'snippet-press' ); ?></p>
 
-            <p>
-                <label for="sp-scope-exclude-ids"><?php esc_html_e( 'Exclude Post IDs', 'snippet-press' ); ?></label>
-                <input type="text" id="sp-scope-exclude-ids" class="widefat" name="sp_scope_rules[exclude_post_ids]" placeholder="<?php esc_attr_e( '21,34', 'snippet-press' ); ?>"
-                    value="<?php echo esc_attr( isset( $rules['exclude_post_ids'] ) ? implode( ',', array_map( 'absint', (array) $rules['exclude_post_ids'] ) ) : '' ); ?>" />
-            </p>
+                        <div class="sp-snippet-advanced__grid">
+                            <div class="sp-field">
+                                <label class="sp-field__label" for="sp-scope-include-ids"><?php esc_html_e( 'Include Post IDs', 'snippet-press' ); ?></label>
+                                <input type="text" id="sp-scope-include-ids" class="sp-field__control" name="sp_scope_rules[include_post_ids]" placeholder="<?php esc_attr_e( '12,45,78', 'snippet-press' ); ?>"
+                                    value="<?php echo esc_attr( $include_post_ids_value ); ?>" />
+                            </div>
 
-            <p>
-                <label for="sp-scope-post-types"><?php esc_html_e( 'Post Types', 'snippet-press' ); ?></label>
-                <input type="text" id="sp-scope-post-types" class="widefat" name="sp_scope_rules[include_post_types]" placeholder="<?php esc_attr_e( 'post,page,product', 'snippet-press' ); ?>"
-                    value="<?php echo esc_attr( isset( $rules['include_post_types'] ) ? implode( ',', array_map( 'sanitize_key', (array) $rules['include_post_types'] ) ) : '' ); ?>" />
-            </p>
+                            <div class="sp-field">
+                                <label class="sp-field__label" for="sp-scope-exclude-ids"><?php esc_html_e( 'Exclude Post IDs', 'snippet-press' ); ?></label>
+                                <input type="text" id="sp-scope-exclude-ids" class="sp-field__control" name="sp_scope_rules[exclude_post_ids]" placeholder="<?php esc_attr_e( '21,34', 'snippet-press' ); ?>"
+                                    value="<?php echo esc_attr( $exclude_post_ids_value ); ?>" />
+                            </div>
 
-            <p>
-                <label for="sp-scope-tax-terms"><?php esc_html_e( 'Taxonomy Terms', 'snippet-press' ); ?></label>
-                <textarea id="sp-scope-tax-terms" class="widefat" rows="3" name="sp_scope_rules[include_tax_terms]" placeholder="<?php echo esc_attr( $tax_placeholder ); ?>"><?php echo esc_textarea( implode( PHP_EOL, $include_terms_lines ) ); ?></textarea>
-                <span class="description"><?php esc_html_e( 'One taxonomy per line. Example: category:12,45', 'snippet-press' ); ?></span>
-            </p>
+                            <div class="sp-field">
+                                <label class="sp-field__label" for="sp-scope-post-types"><?php esc_html_e( 'Allowed Post Types', 'snippet-press' ); ?></label>
+                                <input type="text" id="sp-scope-post-types" class="sp-field__control" name="sp_scope_rules[include_post_types]" placeholder="<?php esc_attr_e( 'post,page,product', 'snippet-press' ); ?>"
+                                    value="<?php echo esc_attr( $include_post_types ); ?>" />
+                                <p class="sp-field__description"><?php esc_html_e( 'Comma-separated list. Leave empty to run on all types.', 'snippet-press' ); ?></p>
+                            </div>
 
-            <p>
-                <label for="sp-scope-url-patterns"><?php esc_html_e( 'URL Patterns', 'snippet-press' ); ?></label>
-                <textarea id="sp-scope-url-patterns" class="widefat" rows="3" name="sp_scope_rules[url_patterns]" placeholder="<?php echo esc_attr( $url_placeholder ); ?>"><?php
-                    if ( isset( $rules['url_patterns'] ) && is_array( $rules['url_patterns'] ) ) {
-                        echo esc_textarea( implode( PHP_EOL, array_map( 'sanitize_text_field', $rules['url_patterns'] ) ) );
-                    }
-                ?></textarea>
-            </p>
-        </details>
+                            <div class="sp-field">
+                                <label class="sp-field__label" for="sp-scope-tax-terms"><?php esc_html_e( 'Taxonomy & Terms', 'snippet-press' ); ?></label>
+                                <textarea id="sp-scope-tax-terms" class="sp-field__control" rows="3" name="sp_scope_rules[include_tax_terms]" placeholder="<?php echo esc_attr( $tax_placeholder ); ?>"><?php echo esc_textarea( $tax_terms_value ); ?></textarea>
+                                <p class="sp-field__description"><?php esc_html_e( 'Format each line as taxonomy:term_id,term_id', 'snippet-press' ); ?></p>
+                            </div>
+
+                            <div class="sp-field">
+                                <label class="sp-field__label" for="sp-scope-url-patterns"><?php esc_html_e( 'URL Patterns', 'snippet-press' ); ?></label>
+                                <textarea id="sp-scope-url-patterns" class="sp-field__control" rows="3" name="sp_scope_rules[url_patterns]" placeholder="<?php echo esc_attr( $url_placeholder ); ?>"><?php echo esc_textarea( $url_patterns_value ); ?></textarea>
+                                <p class="sp-field__description"><?php esc_html_e( 'One pattern per line. Use * as a wildcard (e.g. /blog/*).', 'snippet-press' ); ?></p>
+                            </div>
+                        </div>
+                    </details>
+                </section>
+            </div>
+        </div>
         <?php
+
+    }
+
+    public function customize_meta_boxes( string $post_type ): void {
+        if ( Snippet_Post_Type::POST_TYPE !== $post_type ) {
+            return;
+        }
+
+        remove_meta_box( 'slugdiv', Snippet_Post_Type::POST_TYPE, 'normal' );
     }
 
     public function save( int $post_id, WP_Post $post, bool $update ): void {
@@ -177,6 +202,29 @@ class Snippet_Settings_Metabox {
 
         if ( ! current_user_can( 'edit_post', $post_id ) ) {
             return;
+        }
+
+        if ( isset( $_POST['sp_snippet_status'] ) ) {
+            $raw_status = wp_unslash( $_POST['sp_snippet_status'] );
+            if ( is_array( $raw_status ) ) {
+                $raw_status = end( $raw_status );
+            }
+
+            $normalized_status = 'enabled' === $raw_status ? 'enabled' : 'disabled';
+            update_post_meta( $post_id, '_sp_status', $normalized_status );
+
+            $desired_post_status = 'enabled' === $normalized_status ? 'publish' : 'draft';
+
+            if ( $post->post_status !== $desired_post_status ) {
+                remove_action( 'save_post_' . Snippet_Post_Type::POST_TYPE, [ $this, 'save' ], 10 );
+                wp_update_post(
+                    [
+                        'ID'          => $post_id,
+                        'post_status' => $desired_post_status,
+                    ]
+                );
+                add_action( 'save_post_' . Snippet_Post_Type::POST_TYPE, [ $this, 'save' ], 10, 3 );
+            }
         }
 
         if ( isset( $_POST['sp_snippet_type'] ) ) {
@@ -326,4 +374,5 @@ class Snippet_Settings_Metabox {
         return [ 'frontend' ];
     }
 }
+
 

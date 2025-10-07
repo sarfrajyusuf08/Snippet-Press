@@ -5,10 +5,7 @@
     var settings = window.snippetPressLibrary || {};
     var ajaxUrl = settings.ajaxUrl || window.ajaxurl || '';
     var nonce = settings.nonce || '';
-
-    if (!ajaxUrl || !nonce) {
-        return;
-    }
+    var hasAjax = !!(ajaxUrl && nonce);
 
     var strings = settings.strings || {};
     var loadingText = strings.loading || 'Creating...';
@@ -41,6 +38,10 @@
 
     $(document).on('click', '.sp-template-card .sp-use-snippet', function (event) {
         event.preventDefault();
+
+        if (!hasAjax) {
+            return;
+        }
 
         var $button = $(this);
 
@@ -118,16 +119,6 @@
                 return ($card.data('category') || '') === activeFilter.slice(9);
             }
 
-            if (activeFilter.indexOf('tag-') === 0) {
-                var tagList = ($card.data('tags') || '').toString();
-                if (!tagList) {
-                    return false;
-                }
-
-                var tags = tagList.split(',');
-                return tags.indexOf(activeFilter.slice(4)) !== -1;
-            }
-
             return true;
         }
 
@@ -191,6 +182,49 @@
         applyFilters();
     }
 
-    $(initLibraryFilters);
-})(window, document, jQuery);
+    function initSnippetEditor() {
+        var $body = $('body');
 
+        if (!$body.hasClass('post-type-sp_snippet')) {
+            return;
+        }
+
+        var $toggle = $('.sp-snippet-status-toggle');
+        var $toggleText = $('.sp-snippet-status-toggle__text');
+        var $saveButton = $('.sp-snippet-toolbar__save');
+        var $publishButton = $('#publish');
+
+        if ($saveButton.length && $publishButton.length) {
+            $saveButton.on('click', function (event) {
+                event.preventDefault();
+                if ($publishButton.prop('disabled')) {
+                    return;
+                }
+                $publishButton.trigger('click');
+            });
+        }
+
+        function updateToggleLabel() {
+            if (!$toggle.length || !$toggleText.length) {
+                return;
+            }
+
+            var isActive = $toggle.is(':checked');
+            var activeText = $toggleText.data('active');
+            var inactiveText = $toggleText.data('inactive');
+
+            $toggleText.text(isActive ? activeText : inactiveText);
+            $toggleText.toggleClass('is-active', isActive);
+        }
+
+        if ($toggle.length) {
+            $toggle.on('change', updateToggleLabel);
+            updateToggleLabel();
+        }
+    }
+
+    $(function () {
+        initLibraryFilters();
+        initSnippetEditor();
+    });
+})(window, document, jQuery);

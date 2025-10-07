@@ -14,8 +14,10 @@ class Admin_Assets {
         $page     = isset( $_GET['page'] ) ? sanitize_key( wp_unslash( $_GET['page'] ) ) : '';
         $hook_hit = strpos( $hook, 'sp-' ) !== false || strpos( $hook, 'snippetpress_page_' ) !== false;
         $page_hit = '' !== $page && strpos( $page, 'sp-' ) === 0;
+        $screen   = function_exists( 'get_current_screen' ) ? get_current_screen() : null;
+        $post_hit = $screen && isset( $screen->post_type ) && 'sp_snippet' === $screen->post_type;
 
-        if ( ! $hook_hit && ! $page_hit ) {
+        if ( ! $hook_hit && ! $page_hit && ! $post_hit ) {
             return;
         }
 
