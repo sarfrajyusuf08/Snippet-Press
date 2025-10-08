@@ -224,6 +224,124 @@
             updateToggleLabel();
         }
 
+        var $scopePreview = $('.sp-snippet-scope-preview');
+
+        if ($scopePreview.length) {
+            var scopeLabels = $scopePreview.data('scopeLabels') || {};
+            var emptyLabel = $scopePreview.data('emptyLabel') || 'Select scopes to see where this snippet runs.';
+            var previewLocked = parseInt($scopePreview.data('previewLocked'), 10) === 1;
+            var previewLabels = $scopePreview.data('previewLabels') || {};
+
+            previewLabels.default = previewLabels.default || ($scopePreview.find('.sp-snippet-scope-preview__link').text() || 'Preview sample page');
+
+            var previewUrls = {
+                home: $scopePreview.data('previewHome') || '',
+                admin: $scopePreview.data('previewAdmin') || '',
+                login: $scopePreview.data('previewLogin') || '',
+                editor: $scopePreview.data('previewEditor') || '',
+                rest: $scopePreview.data('previewRest') || ''
+            };
+
+            var $badgeContainer = $scopePreview.find('.sp-snippet-scope-preview__badges');
+            var $previewLink = $scopePreview.find('.sp-snippet-scope-preview__link');
+            var $scopeInputs = $('input[name="sp_snippet_scopes[]"]');
+
+            function escapeHtml(str) {
+                return (str || '').replace(/[&<>"']/g, function (ch) {
+                    switch (ch) {
+                        case '&': return '&amp;';
+                        case '<': return '&lt;';
+                        case '>': return '&gt;';
+                        case '"': return '&quot;';
+                        case "'": return '&#39;';
+                        default: return ch;
+                    }
+                });
+            }
+
+            function uniqueScopes(scopes) {
+                var seen = {};
+                return scopes.filter(function (scope) {
+                    if (seen[scope]) {
+                        return false;
+                    }
+                    seen[scope] = true;
+                    return true;
+                });
+            }
+
+            function resolvePreviewContext(scopes) {
+                if (!scopes.length) {
+                    return 'home';
+                }
+
+                if (scopes.indexOf('admin') !== -1) {
+                    return 'admin';
+                }
+
+                if (scopes.indexOf('login') !== -1) {
+                    return 'login';
+                }
+
+                if (scopes.indexOf('editor') !== -1) {
+                    return 'editor';
+                }
+
+                if (scopes.indexOf('rest') !== -1) {
+                    return 'rest';
+                }
+
+                return 'home';
+            }
+
+            function renderBadges(scopes) {
+                var html = '';
+
+                if (!scopes.length) {
+                    html = '<span class="sp-scope-badge sp-scope-badge--empty">' + escapeHtml(emptyLabel) + '</span>';
+                } else {
+                    scopes.forEach(function (scope) {
+                        var label = scopeLabels[scope] || scope.charAt(0).toUpperCase() + scope.slice(1);
+                        html += '<span class="sp-scope-badge sp-scope-badge--' + escapeHtml(scope) + '">' + escapeHtml(label) + '</span>';
+                    });
+                }
+
+                $badgeContainer.html(html);
+            }
+
+            function updatePreview(scopes) {
+                if (!$previewLink.length || previewLocked) {
+                    return;
+                }
+
+                var context = resolvePreviewContext(scopes);
+                var url = previewUrls[context] || previewUrls.home || '';
+                var label = previewLabels[context] || previewLabels.default;
+
+                if (url) {
+                    $previewLink.attr('href', url).text(label).show();
+                } else {
+                    $previewLink.hide();
+                }
+            }
+
+            function refreshScopePreview() {
+                var scopes = [];
+
+                $scopeInputs.filter(':checked').each(function () {
+                    scopes.push($(this).val());
+                });
+
+                scopes = uniqueScopes(scopes);
+
+                renderBadges(scopes);
+                updatePreview(scopes);
+            }
+
+            refreshScopePreview();
+            $(document).on('change', 'input[name="sp_snippet_scopes[]"]', refreshScopePreview);
+        }
+
         if ($title.length) {
             $title.attr('placeholder', $title.attr('placeholder') || 'Add a title for your snippet');
         }

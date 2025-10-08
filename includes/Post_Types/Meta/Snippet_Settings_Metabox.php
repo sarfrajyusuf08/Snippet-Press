@@ -35,6 +35,11 @@ class Snippet_Settings_Metabox {
         wp_nonce_field( 'sp_snippet_settings', 'sp_snippet_settings_nonce' );
 
         $type   = get_post_meta( $post->ID, '_sp_type', true ) ?: 'php';
+        $status = get_post_meta( $post->ID, '_sp_status', true ) ?: 'disabled';
+        $is_enabled = 'enabled' === $status;
+        $status_active_label   = __( 'Enabled', 'snippet-press' );
+        $status_inactive_label = __( 'Disabled', 'snippet-press' );
+
         $scopes = self::sanitize_scopes( (array) get_post_meta( $post->ID, '_sp_scopes', true ) );
         if ( empty( $scopes ) ) {
             $scopes = self::sanitize_scopes( $this->default_scopes() );
@@ -49,6 +54,24 @@ class Snippet_Settings_Metabox {
             }
         }
 
+        $include_post_ids_value  = '';
+        $exclude_post_ids_value  = '';
+        $include_post_types      = '';
+        $tax_terms_value         = '';
+        $url_patterns_value      = '';
+
+        if ( ! empty( $rules['include_post_ids'] ) && is_array( $rules['include_post_ids'] ) ) {
+            $include_post_ids_value = implode( ',', array_map( 'absint', (array) $rules['include_post_ids'] ) );
+        }
+
+        if ( ! empty( $rules['exclude_post_ids'] ) && is_array( $rules['exclude_post_ids'] ) ) {
+            $exclude_post_ids_value = implode( ',', array_map( 'absint', (array) $rules['exclude_post_ids'] ) );
+        }
+
+        if ( ! empty( $rules['include_post_types'] ) && is_array( $rules['include_post_types'] ) ) {
+            $include_post_types = implode( ',', array_map( 'sanitize_key', (array) $rules['include_post_types'] ) );
+        }
+
         $type_options = [
             'php'  => __( 'PHP', 'snippet-press' ),
             'js'   => __( 'JavaScript', 'snippet-press' ),
@@ -56,12 +79,14 @@ class Snippet_Settings_Metabox {
             'html' => __( 'HTML', 'snippet-press' ),
         ];
 
-        $scope_options = [
-            'global'   => __( 'Global', 'snippet-press' ),
-            'frontend' => __( 'Frontend', 'snippet-press' ),
-            'admin'    => __( 'Admin', 'snippet-press' ),
-            'login'    => __( 'Login', 'snippet-press' ),
-            'editor'   => __( 'Block Editor', 'snippet-press' ),
+        $scope_labels_map = $this->scope_label_map();
+        $scope_options    = [
+            'global'   => $scope_labels_map['global'],
+            'frontend' => $scope_labels_map['frontend'],
+            'admin'    => $scope_labels_map['admin'],
+            'login'    => $scope_labels_map['login'],
+            'editor'   => $scope_labels_map['editor'],
+            'rest'     => $scope_labels_map['rest'],
         ];
 
         $selected_scopes = array_map(
@@ -88,6 +113,40 @@ class Snippet_Settings_Metabox {
 
         $tax_placeholder = sprintf( 'category:12,45%sproduct_cat:21', PHP_EOL );
         $url_placeholder = sprintf( '/blog/*%s/shop/*', PHP_EOL );
+        $tax_terms_value = implode( PHP_EOL, $include_terms_lines );
+
+        if ( ! empty( $rules['url_patterns'] ) && is_array( $rules['url_patterns'] ) ) {
+            $url_patterns_value = implode(
+                PHP_EOL,
+                array_map(
+                    static function ( $pattern ) {
+                        return sanitize_text_field( (string) $pattern );
+                    },
+                    (array) $rules['url_patterns']
+                )
+            );
+        }
+
+        $scope_badges_html = $this->render_scope_badges_html( $selected_scopes, $scope_labels_map );
+        $rules_summary     = $this->format_scope_rules_summary( $rules );
+        $preview_details   = $this->determine_preview_link( $selected_scopes, $rules );
+
+        $preview_url     = $preview_details['url'];
+        $preview_label   = $preview_details['label'];
+        $preview_context = $preview_details['context'];
+        $preview_locked  = $preview_details['locked'] ? '1' : '0';
+        $preview_labels_map = $preview_details['labels'];
+
+        $scope_labels_json  = wp_json_encode( $scope_labels_map );
+        $preview_labels_json = wp_json_encode( $preview_labels_map );
+
+        if ( false === $scope_labels_json ) {
+            $scope_labels_json = '{}';
+        }
+
+        if ( false === $preview_labels_json ) {
+            $preview_labels_json = '{}';
+        }
 
         ?>
         <div class="sp-snippet-editor">
@@ -104,6 +163,33 @@ class Snippet_Settings_Metabox {
                     </label>
                 </div>
                 <button type="button" class="button button-primary sp-snippet-toolbar__save"><?php esc_html_e( 'Save Snippet', 'snippet-press' ); ?></button>
+            </div>
+
+            <div
+                class="sp-snippet-scope-preview"
+                data-scope-labels="<?php echo esc_attr( $scope_labels_json ); ?>"
+                data-empty-label="<?php esc_attr_e( 'Select scopes to see where this snippet runs.', 'snippet-press' ); ?>"
+                data-preview-locked="<?php echo esc_attr( $preview_locked ); ?>"
+                data-preview-home="<?php echo esc_url( home_url( '/' ) ); ?>"
+                data-preview-admin="<?php echo esc_url( admin_url() ); ?>"
+                data-preview-login="<?php echo esc_url( wp_login_url() ); ?>"
+                data-preview-editor="<?php echo esc_url( admin_url( 'post-new.php' ) ); ?>"
+                data-preview-rest="<?php echo esc_url( rest_url() ); ?>"
+                data-preview-labels="<?php echo esc_attr( $preview_labels_json ); ?>"
+                data-preview-context="<?php echo esc_attr( $preview_context ); ?>"
+            >
+                <div class="sp-snippet-scope-preview__title"><?php esc_html_e( 'Scope Preview', 'snippet-press' ); ?></div>
+                <div class="sp-snippet-scope-preview__badges"><?php echo wp_kses_post( $scope_badges_html ); ?></div>
+
+                <?php if ( '' !== $rules_summary ) : ?>
+                    <p class="sp-snippet-scope-preview__summary"><?php echo esc_html( $rules_summary ); ?></p>
+                <?php endif; ?>
+
+                <?php if ( $preview_url ) : ?>
+                    <a class="button button-secondary sp-snippet-scope-preview__link" href="<?php echo esc_url( $preview_url ); ?>" target="_blank" rel="noopener">
+                        <?php echo esc_html( $preview_label ); ?>
+                    </a>
+                <?php endif; ?>
             </div>
 
             <div class="sp-snippet-editor__panel">
@@ -247,6 +333,306 @@ class Snippet_Settings_Metabox {
     }
 
     /**
+     * Provide translated labels for scope selections.
+     */
+    protected function scope_label_map(): array {
+        return [
+            'global'   => __( 'Global', 'snippet-press' ),
+            'frontend' => __( 'Frontend', 'snippet-press' ),
+            'admin'    => __( 'Admin', 'snippet-press' ),
+            'login'    => __( 'Login', 'snippet-press' ),
+            'editor'   => __( 'Block Editor', 'snippet-press' ),
+            'rest'     => __( 'REST API', 'snippet-press' ),
+        ];
+    }
+
+    /**
+     * Build HTML badges for the selected scopes.
+     *
+     * @param array<int,string> $scopes Selected scopes.
+     * @param array<string,string> $labels Scope label map.
+     */
+    protected function render_scope_badges_html( array $scopes, array $labels ): string {
+        $badges = [];
+        $seen   = [];
+
+        foreach ( $scopes as $scope ) {
+            $scope = sanitize_key( $scope );
+
+            if ( isset( $seen[ $scope ] ) ) {
+                continue;
+            }
+
+            $seen[ $scope ] = true;
+
+            $label = $labels[ $scope ] ?? ucwords( str_replace( '_', ' ', $scope ) );
+
+            $badges[] = sprintf(
+                '<span class="sp-scope-badge sp-scope-badge--%1$s">%2$s</span>',
+                esc_attr( $scope ),
+                esc_html( $label )
+            );
+        }
+
+        if ( empty( $badges ) ) {
+            $badges[] = sprintf(
+                '<span class="sp-scope-badge sp-scope-badge--empty">%s</span>',
+                esc_html__( 'No scopes selected', 'snippet-press' )
+            );
+        }
+
+        return implode( '', $badges );
+    }
+
+    /**
+     * Summarise scope rules into a concise sentence.
+     *
+     * @param array<string,mixed> $rules Normalised scope rules.
+     */
+    protected function format_scope_rules_summary( array $rules ): string {
+        $parts = [];
+
+        if ( ! empty( $rules['include_post_ids'] ) && is_array( $rules['include_post_ids'] ) ) {
+            $parts[] = sprintf(
+                /* translators: %s is a list of post titles or IDs. */
+                __( 'Includes posts: %s', 'snippet-press' ),
+                $this->summarize_posts( $rules['include_post_ids'] )
+            );
+        }
+
+        if ( ! empty( $rules['exclude_post_ids'] ) && is_array( $rules['exclude_post_ids'] ) ) {
+            $parts[] = sprintf(
+                __( 'Excludes posts: %s', 'snippet-press' ),
+                $this->summarize_posts( $rules['exclude_post_ids'] )
+            );
+        }
+
+        if ( ! empty( $rules['include_post_types'] ) && is_array( $rules['include_post_types'] ) ) {
+            $types = array_map(
+                static function ( $type ) {
+                    $type = sanitize_key( (string) $type );
+                    $object = get_post_type_object( $type );
+                    if ( $object && isset( $object->labels->name ) ) {
+                        return $object->labels->name;
+                    }
+                    return strtoupper( $type );
+                },
+                $rules['include_post_types']
+            );
+
+            if ( ! empty( $types ) ) {
+                $parts[] = sprintf(
+                    __( 'Allowed post types: %s', 'snippet-press' ),
+                    implode( ', ', array_slice( $types, 0, 3 ) )
+                );
+            }
+        }
+
+        if ( ! empty( $rules['include_tax_terms'] ) && is_array( $rules['include_tax_terms'] ) ) {
+            $parts[] = __( 'Requires specific taxonomy terms', 'snippet-press' );
+        }
+
+        if ( ! empty( $rules['url_patterns'] ) && is_array( $rules['url_patterns'] ) ) {
+            $patterns = array_map(
+                static function ( $pattern ) {
+                    return trim( (string) $pattern );
+                },
+                $rules['url_patterns']
+            );
+
+            $patterns = array_filter( $patterns );
+
+            if ( ! empty( $patterns ) ) {
+                $parts[] = sprintf(
+                    __( 'URL patterns: %s', 'snippet-press' ),
+                    implode( ', ', array_slice( $patterns, 0, 3 ) )
+                );
+            }
+        }
+
+        return implode( ' • ', $parts );
+    }
+
+    /**
+     * Determine a representative preview link for the current scope.
+     *
+     * @param array<int,string> $scopes Selected scopes.
+     * @param array<string,mixed> $rules Scope rules.
+     *
+     * @return array<string,mixed>
+     */
+    protected function determine_preview_link( array $scopes, array $rules ): array {
+        $labels = $this->preview_label_map();
+
+        $result = [
+            'url'     => '',
+            'label'   => $labels['default'],
+            'context' => 'home',
+            'locked'  => false,
+            'labels'  => $labels,
+        ];
+
+        if ( ! empty( $rules['include_post_ids'][0] ) ) {
+            $id   = absint( $rules['include_post_ids'][0] );
+            $link = $id ? get_permalink( $id ) : '';
+
+            if ( $link ) {
+                $title = get_the_title( $id );
+                if ( '' === $title ) {
+                    $title = sprintf( __( 'Post #%d', 'snippet-press' ), $id );
+                }
+
+                $label = sprintf( __( 'Preview "%s"', 'snippet-press' ), $title );
+
+                $result['url']               = $link;
+                $result['label']             = $label;
+                $result['context']           = 'custom';
+                $result['locked']            = true;
+                $result['labels']['custom']  = $label;
+
+                return $result;
+            }
+        }
+
+        if ( ! empty( $rules['include_post_types'][0] ) ) {
+            $type = sanitize_key( (string) $rules['include_post_types'][0] );
+
+            if ( '' !== $type ) {
+                $url = 'post' === $type ? admin_url( 'edit.php' ) : admin_url( 'edit.php?post_type=' . $type );
+                $obj = get_post_type_object( $type );
+                $label_name = $obj && isset( $obj->labels->name ) ? $obj->labels->name : strtoupper( $type );
+                $label = sprintf( __( 'View %s list', 'snippet-press' ), $label_name );
+
+                $result['url']              = $url;
+                $result['label']            = $label;
+                $result['context']          = 'custom';
+                $result['locked']           = true;
+                $result['labels']['custom'] = $label;
+
+                return $result;
+            }
+        }
+
+        if ( ! empty( $rules['url_patterns'][0] ) ) {
+            $pattern = trim( (string) $rules['url_patterns'][0] );
+
+            if ( '' !== $pattern ) {
+                $normalized = ltrim( str_replace( '*', '', $pattern ), '/' );
+                $url        = home_url( '/' . $normalized );
+
+                $result['url']              = $url;
+                $result['label']            = __( 'Preview matching URL', 'snippet-press' );
+                $result['context']          = 'custom';
+                $result['locked']           = true;
+                $result['labels']['custom'] = $result['label'];
+
+                return $result;
+            }
+        }
+
+        $scopes = array_map( 'sanitize_key', $scopes );
+
+        if ( in_array( 'admin', $scopes, true ) ) {
+            $result['url']     = admin_url();
+            $result['label']   = $labels['admin'];
+            $result['context'] = 'admin';
+
+            return $result;
+        }
+
+        if ( in_array( 'login', $scopes, true ) ) {
+            $result['url']     = wp_login_url();
+            $result['label']   = $labels['login'];
+            $result['context'] = 'login';
+
+            return $result;
+        }
+
+        if ( in_array( 'editor', $scopes, true ) ) {
+            $result['url']     = admin_url( 'post-new.php' );
+            $result['label']   = $labels['editor'];
+            $result['context'] = 'editor';
+
+            return $result;
+        }
+
+        if ( in_array( 'rest', $scopes, true ) ) {
+            $result['url']     = rest_url();
+            $result['label']   = $labels['rest'];
+            $result['context'] = 'rest';
+
+            return $result;
+        }
+
+        // Default to frontend preview.
+        $result['url']     = home_url( '/' );
+        $result['label']   = $labels['home'];
+        $result['context'] = 'home';
+
+        return $result;
+    }
+
+    /**
+     * Provide default preview labels.
+     */
+    protected function preview_label_map(): array {
+        return [
+            'default' => __( 'Preview sample page', 'snippet-press' ),
+            'home'    => __( 'Preview frontend', 'snippet-press' ),
+            'admin'   => __( 'Open Dashboard', 'snippet-press' ),
+            'login'   => __( 'Open login screen', 'snippet-press' ),
+            'editor'  => __( 'Open Block Editor', 'snippet-press' ),
+            'rest'    => __( 'Open REST API index', 'snippet-press' ),
+        ];
+    }
+
+    /**
+     * Summarise post IDs into human readable text.
+     *
+     * @param array<int,mixed> $ids List of IDs.
+     */
+    protected function summarize_posts( array $ids ): string {
+        $ids = array_values(
+            array_filter(
+                array_map(
+                    static function ( $id ) {
+                        return absint( $id );
+                    },
+                    $ids
+                )
+            )
+        );
+
+        if ( empty( $ids ) ) {
+            return '';
+        }
+
+        $labels = [];
+
+        foreach ( $ids as $index => $id ) {
+            if ( $index >= 3 ) {
+                break;
+            }
+
+            $title = get_the_title( $id );
+
+            if ( '' === $title ) {
+                $title = sprintf( __( 'Post #%d', 'snippet-press' ), $id );
+            }
+
+            $labels[] = $title;
+        }
+
+        $remaining = count( $ids ) - count( $labels );
+
+        if ( $remaining > 0 ) {
+            $labels[] = sprintf( __( '%d more', 'snippet-press' ), $remaining );
+        }
+
+        return implode( ', ', $labels );
+    }
+
+    /**
      * Sanitize scope selections from the UI.
      *
      * @param array<int,string> $scopes Raw scope values.
@@ -374,5 +760,3 @@ class Snippet_Settings_Metabox {
         return [ 'frontend' ];
     }
 }
-
-
