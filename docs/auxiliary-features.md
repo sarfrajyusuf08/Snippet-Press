@@ -1,4 +1,4 @@
-﻿# Auxiliary Features Plan
+﻿# Auxiliary Features Plan (Plugin v1.0.0)
 
 ## Search & Discovery
 - Build searchable index stored in transient `sv_search_index` (array of snippet IDs with weighted tokens).

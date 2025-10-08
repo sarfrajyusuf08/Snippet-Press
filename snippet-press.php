@@ -3,7 +3,7 @@
  * Plugin Name:       Snippet Press
  * Plugin URI:        https://example.com/snippet-press
  * Description:       Manage and execute custom PHP, JS, and CSS snippets with advanced controls.
- * Version:           0.1.0
+ * Version:           1.0.0
  * Author:            Snippet Press Team
  * Author URI:        https://example.com
  * Text Domain:       snippet-press
@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) {
     exit;
 }
 
-define( 'SNIPPET_PRESS_VERSION', '0.1.0' );
+define( 'SNIPPET_PRESS_VERSION', '1.0.0' );
 define( 'SNIPPET_PRESS_FILE', __FILE__ );
 define( 'SNIPPET_PRESS_BASENAME', plugin_basename( __FILE__ ) );
 define( 'SNIPPET_PRESS_DIR', plugin_dir_path( __FILE__ ) );

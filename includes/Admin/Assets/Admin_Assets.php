@@ -21,10 +21,33 @@ class Admin_Assets {
             return;
         }
 
-        $style_path  = SNIPPET_PRESS_DIR . 'assets/css/admin.css';
-        $script_path = SNIPPET_PRESS_DIR . 'assets/js/admin.js';
+        $style_path   = SNIPPET_PRESS_DIR . 'assets/css/admin.css';
+        $partials_dir = SNIPPET_PRESS_DIR . 'assets/css/admin';
+        $script_path  = SNIPPET_PRESS_DIR . 'assets/js/admin.js';
 
-        $style_version  = file_exists( $style_path ) ? (string) filemtime( $style_path ) : SNIPPET_PRESS_VERSION;
+        $style_files = [ $style_path ];
+
+        if ( is_dir( $partials_dir ) ) {
+            $partial_files = glob( trailingslashit( $partials_dir ) . '*.css' );
+
+            if ( is_array( $partial_files ) && ! empty( $partial_files ) ) {
+                $style_files = array_merge( $style_files, $partial_files );
+            }
+        }
+
+        $style_mtime = 0;
+
+        foreach ( $style_files as $file ) {
+            if ( file_exists( $file ) ) {
+                $mtime = (int) filemtime( $file );
+
+                if ( $mtime > $style_mtime ) {
+                    $style_mtime = $mtime;
+                }
+            }
+        }
+
+        $style_version  = $style_mtime ? (string) $style_mtime : SNIPPET_PRESS_VERSION;
         $script_version = file_exists( $script_path ) ? (string) filemtime( $script_path ) : SNIPPET_PRESS_VERSION;
 
         wp_enqueue_style( 'snippet-press-admin', SNIPPET_PRESS_URL . 'assets/css/admin.css', [], $style_version );
