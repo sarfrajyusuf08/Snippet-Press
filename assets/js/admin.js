@@ -193,6 +193,8 @@
         var $toggleText = $('.sp-snippet-status-toggle__text');
         var $saveButton = $('.sp-snippet-toolbar__save');
         var $publishButton = $('#publish');
+        var $title = $('#title');
+        var $codeArea = $('#content');
 
         if ($saveButton.length && $publishButton.length) {
             $saveButton.on('click', function (event) {
@@ -220,6 +222,14 @@
         if ($toggle.length) {
             $toggle.on('change', updateToggleLabel);
             updateToggleLabel();
+        }
+
+        if ($title.length) {
+            $title.attr('placeholder', $title.attr('placeholder') || 'Add a title for your snippet');
+        }
+
+        if ($codeArea.length) {
+            $codeArea.attr('placeholder', $codeArea.attr('placeholder') || 'Write or paste your snippet code here...');
         }
     }
 
