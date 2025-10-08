@@ -376,6 +376,17 @@ class Settings_Page extends Abstract_Admin_Page {
         }
         echo '<p class="description">' . esc_html__( 'Increase these limits if you need to store larger snippets without triggering warnings.', 'snippet-press' ) . '</p>';
         echo '</div>';
+
+        echo '<div class="field">';
+        echo '<label>' . esc_html__( 'Inline profiling', 'snippet-press' ) . '</label>';
+        echo '<div>' . $this->checkbox_input( 'profiling_enabled', '1', ! empty( $settings['profiling_enabled'] ), __( 'Capture execution time for PHP snippets', 'snippet-press' ) ) . '</div>';
+        printf(
+            '<div class="sp-settings-inline"><span>%1$s</span><input type="number" min="10" max="10000" step="10" name="profiling_slow_threshold_ms" value="%2$d" /></div>',
+            esc_html__( 'Slow threshold (ms)', 'snippet-press' ),
+            (int) $settings['profiling_slow_threshold_ms']
+        );
+        echo '<p class="description">' . esc_html__( 'Snippets slower than this threshold are flagged in the library list after profiling runs.', 'snippet-press' ) . '</p>';
+        echo '</div>';
         echo '</div>';
 
         echo '<div class="sp-form-actions">';
@@ -448,6 +459,12 @@ class Settings_Page extends Abstract_Admin_Page {
                         $value             = (int) $_POST[ $key ];
                         $current[ $key ] = max( 512, min( 2097152, $value ?: $default ) );
                     }
+                }
+                $current['profiling_enabled'] = $this->post_bool( 'profiling_enabled' );
+
+                if ( isset( $_POST['profiling_slow_threshold_ms'] ) ) {
+                    $threshold = (int) $_POST['profiling_slow_threshold_ms'];
+                    $current['profiling_slow_threshold_ms'] = max( 10, min( 10000, $threshold ?: 250 ) );
                 }
                 break;
 

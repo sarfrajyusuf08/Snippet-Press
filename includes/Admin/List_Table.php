@@ -3,6 +3,7 @@
 namespace SnippetPress\Admin;
 
 use SnippetPress\Infrastructure\Capabilities;
+use SnippetPress\Infrastructure\Settings;
 use SnippetPress\Post_Types\Snippet_Post_Type;
 use WP_List_Table;
 use WP_Post;
@@ -51,6 +52,8 @@ class List_Table extends WP_List_Table {
     protected string $base_url;
     protected array $status_counts = [];
     protected array $tag_filter = [];
+    protected bool $profiling_enabled = false;
+    protected int $profiling_threshold_ms = 250;
 
     /**
      * Retrieve available snippet types.
@@ -77,6 +80,14 @@ class List_Table extends WP_List_Table {
         $this->tag_filter    = $this->sanitize_tags( $tag_param );
         $this->search_term   = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
         $this->base_url      = $this->build_base_url();
+
+        $options = get_option( Settings::OPTION_KEY, [] );
+        if ( ! is_array( $options ) ) {
+            $options = [];
+        }
+
+        $this->profiling_enabled      = ! empty( $options['profiling_enabled'] );
+        $this->profiling_threshold_ms = isset( $options['profiling_slow_threshold_ms'] ) ? max( 10, (int) $options['profiling_slow_threshold_ms'] ) : 250;
     }
 
     public function current_status(): string {
@@ -263,6 +274,7 @@ class List_Table extends WP_List_Table {
             'title'       => __( 'Name', 'snippet-press' ),
             'sp_type'     => __( 'Type', 'snippet-press' ),
             'sp_tags'     => __( 'Tags', 'snippet-press' ),
+            'sp_performance' => __( 'Performance', 'snippet-press' ),
             'status'      => __( 'Status', 'snippet-press' ),
             'sp_scopes'   => __( 'Scope', 'snippet-press' ),
             'sp_priority' => __( 'Priority', 'snippet-press' ),
@@ -405,6 +417,10 @@ class List_Table extends WP_List_Table {
             $tag_list = [];
         }
 
+        $duration_meta = get_post_meta( $post->ID, '_sp_last_exec_ms', true );
+        $duration      = is_numeric( $duration_meta ) ? round( (float) $duration_meta, 2 ) : null;
+        $profiled_at   = (int) get_post_meta( $post->ID, '_sp_last_exec_at', true );
+
         return [
             'ID'          => $post->ID,
             'title'       => $post->post_title,
@@ -415,6 +431,8 @@ class List_Table extends WP_List_Table {
             'modified'    => get_post_modified_time( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), false, $post, true ),
             'author'      => $post->post_author,
             'sp_tags'     => $tag_list,
+            'sp_last_exec_ms'  => $duration,
+            'sp_last_exec_at'  => $profiled_at,
         ];
     }
 
@@ -721,6 +739,51 @@ class List_Table extends WP_List_Table {
         return $this->format_tags( (array) ( $item['sp_tags'] ?? [] ) );
     }
 
+    protected function column_sp_performance( $item ): string {
+        if ( ! $this->profiling_enabled ) {
+            return '<span class="sp-performance-meta">' . esc_html__( 'Profiling disabled', 'snippet-press' ) . '</span>';
+        }
+
+        if ( isset( $item['sp_type'] ) && 'php' !== $item['sp_type'] ) {
+            return '<span class="sp-performance-meta">' . esc_html__( 'Not applicable', 'snippet-press' ) . '</span>';
+        }
+
+        $duration = $item['sp_last_exec_ms'] ?? null;
+
+        if ( null === $duration ) {
+            return '<span class="sp-performance-meta">' . esc_html__( 'No data yet', 'snippet-press' ) . '</span>';
+        }
+
+        $duration = (float) $duration;
+        $is_slow  = $duration >= $this->profiling_threshold_ms;
+
+        $status_label = $is_slow ? __( 'Slow', 'snippet-press' ) : __( 'OK', 'snippet-press' );
+        $class        = $is_slow ? 'sp-performance-slow' : 'sp-performance-ok';
+
+        $output = sprintf(
+            '<span class="sp-performance-metric %1$s">%2$s · %3$s</span>',
+            esc_attr( $class ),
+            esc_html( $status_label ),
+            esc_html( $this->format_duration( $duration ) )
+        );
+
+        $timestamp = isset( $item['sp_last_exec_at'] ) ? (int) $item['sp_last_exec_at'] : 0;
+
+        if ( $timestamp > 0 ) {
+            $format   = get_option( 'date_format' ) . ' ' . get_option( 'time_format' );
+            $datetime = wp_date( $format, $timestamp );
+
+            if ( false !== $datetime ) {
+                $output .= sprintf(
+                    '<span class="sp-performance-meta">%s</span>',
+                    esc_html( sprintf( __( 'Profiled %s', 'snippet-press' ), $datetime ) )
+                );
+            }
+        }
+
+        return $output;
+    }
+
     protected function column_status( $item ): string {
         return esc_html( $this->format_status_label( $item['status'] ) );
     }
@@ -741,6 +804,14 @@ class List_Table extends WP_List_Table {
         $links = array_map( 'wp_kses_post', $this->get_row_actions( $item ) );
         return implode( ' | ', $links );
     }
+
+    protected function format_duration( float $duration_ms ): string {
+        $precision = $duration_ms >= 100 ? 0 : 1;
+        $rounded   = round( $duration_ms, $precision );
+
+        return sprintf( '%s ms', number_format_i18n( $rounded, $precision ) );
+    }
+
     protected function column_default( $item, $column_name ) {
         return esc_html( $item[ $column_name ] ?? '' );
     }

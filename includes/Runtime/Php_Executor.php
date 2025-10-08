@@ -8,12 +8,14 @@ namespace SnippetPress\Runtime;
 class Php_Executor {
     /**
      * Execute PHP code for a snippet.
+     *
+     * @return float|null Execution duration in milliseconds when $capture_timing is true.
      */
-    public function execute( array $snippet ): void {
+    public function execute( array $snippet, bool $capture_timing = false ): ?float {
         $code = ltrim( $snippet['content'] );
 
         if ( '' === $code ) {
-            return;
+            return $capture_timing ? 0.0 : null;
         }
 
         $code = html_entity_decode( $code, ENT_QUOTES | ENT_HTML5, 'UTF-8' );
@@ -26,7 +28,7 @@ class Php_Executor {
         $code = trim( $code );
 
         if ( '' === $code ) {
-            return;
+            return $capture_timing ? 0.0 : null;
         }
 
         if ( false === strpos( $code, '<?' ) ) {
@@ -37,6 +39,20 @@ class Php_Executor {
             eval( '?>' . $code ); // phpcs:ignore Squiz.PHP.Eval.Discouraged
         };
 
-        $wrapper();
+        if ( ! $capture_timing ) {
+            $wrapper();
+            return null;
+        }
+
+        $start    = microtime( true );
+        $duration = 0.0;
+
+        try {
+            $wrapper();
+        } finally {
+            $duration = ( microtime( true ) - $start ) * 1000;
+        }
+
+        return max( 0.0, $duration );
     }
 }

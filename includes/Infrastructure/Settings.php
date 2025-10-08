@@ -68,6 +68,8 @@ class Settings extends Service_Provider {
             'php_snippet_size_limit'  => 20480,
             'js_snippet_size_limit'   => 40960,
             'css_snippet_size_limit'  => 20480,
+            'profiling_enabled'       => false,
+            'profiling_slow_threshold_ms' => 250,
             'safe_mode_enabled'       => true,
             'safe_mode_last_snippet'  => 0,
             'lint_php'                => true,
@@ -81,4 +83,3 @@ class Settings extends Service_Provider {
         ];
     }
 }
-

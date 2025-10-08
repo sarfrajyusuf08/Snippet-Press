@@ -76,3 +76,28 @@ body.post-type-sp_snippet #content_wp_fullscreen_toolbar,
 body.post-type-sp_snippet .quicktags-toolbar {
     display: none !important;
 }
+
+.sp-performance-metric {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.sp-performance-metric + .sp-performance-meta {
+    margin-top: 4px;
+}
+
+.sp-performance-meta {
+    display: block;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.sp-performance-ok {
+    color: #047857;
+}
+
+.sp-performance-slow {
+    color: #b91c1c;
+}

@@ -59,6 +59,9 @@ class Runtime_Manager extends Service_Provider {
             return;
         }
 
+        $settings          = $this->settings->all();
+        $profiling_enabled = ! empty( $settings['profiling_enabled'] );
+
         $snippets = $this->repository->get_snippets_by_type( 'php' );
 
         foreach ( $snippets as $snippet ) {
@@ -76,7 +79,11 @@ class Runtime_Manager extends Service_Provider {
                 $safe_mode->track_snippet_execution( (int) $snippet['id'] );
             }
 
-            $this->php_executor->execute( $snippet );
+            $duration = $this->php_executor->execute( $snippet, $profiling_enabled );
+
+            if ( $profiling_enabled && null !== $duration ) {
+                $this->record_execution_profile( (int) $snippet['id'], $duration );
+            }
 
             if ( $safe_mode ) {
                 $safe_mode->clear_tracked_snippet();
@@ -331,6 +338,16 @@ class Runtime_Manager extends Service_Provider {
     }
 
     /**
+     * Persist the most recent execution timing for a snippet.
+     */
+    protected function record_execution_profile( int $snippet_id, float $duration_ms ): void {
+        $normalized = round( max( 0.0, $duration_ms ), 2 );
+
+        update_post_meta( $snippet_id, '_sp_last_exec_ms', $normalized );
+        update_post_meta( $snippet_id, '_sp_last_exec_at', time() );
+    }
+
+    /**
      * Retrieve the safe mode manager from the service container.
      */
     protected function safe_mode_manager(): ?Safe_Mode_Manager {
@@ -422,7 +439,6 @@ class Runtime_Manager extends Service_Provider {
         return trim( $content );
     }
 }
-
 
 
 
