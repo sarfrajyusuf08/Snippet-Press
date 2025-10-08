@@ -50,6 +50,7 @@ class List_Table extends WP_List_Table {
     protected string $search_term = '';
     protected string $base_url;
     protected array $status_counts = [];
+    protected array $tag_filter = [];
 
     /**
      * Retrieve available snippet types.
@@ -69,9 +70,11 @@ class List_Table extends WP_List_Table {
 
         $status_param = isset( $_GET['sp_status'] ) ? sanitize_key( wp_unslash( $_GET['sp_status'] ) ) : 'active';
         $type_param   = isset( $_GET['sp_type'] ) ? sanitize_key( wp_unslash( $_GET['sp_type'] ) ) : 'all';
+        $tag_param    = isset( $_GET['sp_tags'] ) ? sanitize_text_field( wp_unslash( $_GET['sp_tags'] ) ) : '';
 
         $this->status_filter = $this->sanitize_status( $status_param );
         $this->type_filter   = $this->sanitize_type( $type_param );
+        $this->tag_filter    = $this->sanitize_tags( $tag_param );
         $this->search_term   = isset( $_REQUEST['s'] ) ? sanitize_text_field( wp_unslash( $_REQUEST['s'] ) ) : '';
         $this->base_url      = $this->build_base_url();
     }
@@ -88,6 +91,10 @@ class List_Table extends WP_List_Table {
         return $this->search_term;
     }
 
+    public function current_tags(): array {
+        return $this->tag_filter;
+    }
+
     /**
      * Render tabs for snippet types.
      */
@@ -95,15 +102,18 @@ class List_Table extends WP_List_Table {
         echo '<h2 class="nav-tab-wrapper sp-type-tabs">';
 
         foreach ( self::TYPE_FILTERS as $slug => $label ) {
-            $url = add_query_arg(
-                [
-                    'page'      => 'sp-code-snippet',
-                    'sp_type'   => $slug,
-                    'sp_status' => $this->status_filter,
-                    's'         => $this->search_term,
-                ],
-                $this->base_url
-            );
+            $args = [
+                'page'      => 'sp-code-snippet',
+                'sp_type'   => $slug,
+                'sp_status' => $this->status_filter,
+                's'         => $this->search_term,
+            ];
+
+            if ( ! empty( $this->tag_filter ) ) {
+                $args['sp_tags'] = implode( ',', $this->tag_filter );
+            }
+
+            $url = add_query_arg( $args, $this->base_url );
             $class      = $slug === $this->type_filter ? ' nav-tab-active' : '';
             $label_text = __( $label, 'snippet-press' );
 
@@ -118,19 +128,119 @@ class List_Table extends WP_List_Table {
         echo '</h2>';
     }
 
+    public function render_tag_filters(): void {
+        $available_tags = get_terms(
+            [
+                'taxonomy'   => Snippet_Post_Type::TAG_TAXONOMY,
+                'hide_empty' => false,
+                'number'     => 20,
+                'orderby'    => 'count',
+                'order'      => 'DESC',
+            ]
+        );
+
+        if ( is_wp_error( $available_tags ) && empty( $this->tag_filter ) ) {
+            return;
+        }
+
+        $active_tags = $this->tag_filter;
+
+        $terms_by_slug = [];
+
+        if ( ! is_wp_error( $available_tags ) ) {
+            foreach ( $available_tags as $term ) {
+                $terms_by_slug[ $term->slug ] = $term;
+            }
+        }
+
+        foreach ( $active_tags as $slug ) {
+            if ( isset( $terms_by_slug[ $slug ] ) ) {
+                continue;
+            }
+
+            $term = get_term_by( 'slug', $slug, Snippet_Post_Type::TAG_TAXONOMY );
+
+            if ( $term && ! is_wp_error( $term ) ) {
+                $terms_by_slug[ $slug ] = $term;
+            }
+        }
+
+        if ( empty( $terms_by_slug ) ) {
+            return;
+        }
+
+        $available_tags = array_values( $terms_by_slug );
+
+        echo '<div class="sp-tag-filter-bar">';
+        echo '<span class="sp-tag-filter-label">' . esc_html__( 'Filter by tag:', 'snippet-press' ) . '</span>';
+
+        $base_args = [
+            'page'      => 'sp-code-snippet',
+            'sp_type'   => $this->type_filter,
+            'sp_status' => $this->status_filter,
+        ];
+
+        if ( '' !== $this->search_term ) {
+            $base_args['s'] = $this->search_term;
+        }
+
+        $all_url   = esc_url( add_query_arg( $base_args, $this->base_url ) );
+        $all_class = empty( $active_tags ) ? ' sp-tag-filter__chip--active' : '';
+
+        printf( '<a href="%1$s" class="sp-tag-filter__chip%2$s">%3$s</a>', $all_url, esc_attr( $all_class ), esc_html__( 'All', 'snippet-press' ) );
+
+        foreach ( $available_tags as $term ) {
+            $slug   = $term->slug;
+            $active = in_array( $slug, $active_tags, true );
+
+            $args = $base_args;
+
+            if ( $active ) {
+                $remaining = array_filter(
+                    $active_tags,
+                    static function ( $tag ) use ( $slug ) {
+                        return $tag !== $slug;
+                    }
+                );
+
+                if ( ! empty( $remaining ) ) {
+                    $args['sp_tags'] = implode( ',', $remaining );
+                }
+            } else {
+                $updated        = $active_tags;
+                $updated[]      = $slug;
+                $args['sp_tags'] = implode( ',', array_unique( $updated ) );
+            }
+
+            $url = esc_url( add_query_arg( $args, $this->base_url ) );
+
+            printf(
+                '<a href="%1$s" class="sp-tag-filter__chip%2$s">%3$s</a>',
+                $url,
+                $active ? ' sp-tag-filter__chip--active' : '',
+                esc_html( $term->name )
+            );
+        }
+
+        echo '</div>';
+    }
+
     public function get_views(): array {
         $views = [];
 
         foreach ( self::STATUS_FILTERS as $slug => $label ) {
-            $url = add_query_arg(
-                [
-                    'page'      => 'sp-code-snippet',
-                    'sp_status' => $slug,
-                    'sp_type'   => $this->type_filter,
-                    's'         => $this->search_term,
-                ],
-                $this->base_url
-            );
+            $args = [
+                'page'      => 'sp-code-snippet',
+                'sp_status' => $slug,
+                'sp_type'   => $this->type_filter,
+                's'         => $this->search_term,
+            ];
+
+            if ( ! empty( $this->tag_filter ) ) {
+                $args['sp_tags'] = implode( ',', $this->tag_filter );
+            }
+
+            $url = add_query_arg( $args, $this->base_url );
             $class      = $slug === $this->status_filter ? ' class="current"' : '';
             $count      = $this->status_counts[ $slug ] ?? 0;
             $label_text = __( $label, 'snippet-press' );
@@ -152,6 +262,7 @@ class List_Table extends WP_List_Table {
             'cb'          => '<input type="checkbox" />',
             'title'       => __( 'Name', 'snippet-press' ),
             'sp_type'     => __( 'Type', 'snippet-press' ),
+            'sp_tags'     => __( 'Tags', 'snippet-press' ),
             'status'      => __( 'Status', 'snippet-press' ),
             'sp_scopes'   => __( 'Scope', 'snippet-press' ),
             'sp_priority' => __( 'Priority', 'snippet-press' ),
@@ -253,6 +364,17 @@ class List_Table extends WP_List_Table {
             $args['meta_query'] = $meta_query;
         }
 
+        if ( ! empty( $this->tag_filter ) ) {
+            $args['tax_query'] = [
+                [
+                    'taxonomy' => Snippet_Post_Type::TAG_TAXONOMY,
+                    'field'    => 'slug',
+                    'terms'    => $this->tag_filter,
+                    'operator' => 'AND',
+                ],
+            ];
+        }
+
         return $args;
     }
 
@@ -271,6 +393,18 @@ class List_Table extends WP_List_Table {
         $status_meta = get_post_meta( $post->ID, '_sp_status', true );
         $status      = $status_meta ?: ( 'publish' === $post->post_status ? 'enabled' : 'disabled' );
 
+        $tag_list = wp_get_object_terms(
+            $post->ID,
+            Snippet_Post_Type::TAG_TAXONOMY,
+            [
+                'fields' => 'names',
+            ]
+        );
+
+        if ( is_wp_error( $tag_list ) ) {
+            $tag_list = [];
+        }
+
         return [
             'ID'          => $post->ID,
             'title'       => $post->post_title,
@@ -280,6 +414,7 @@ class List_Table extends WP_List_Table {
             'sp_priority' => (int) get_post_meta( $post->ID, '_sp_priority', true ) ?: 10,
             'modified'    => get_post_modified_time( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), false, $post, true ),
             'author'      => $post->post_author,
+            'sp_tags'     => $tag_list,
         ];
     }
 
@@ -299,6 +434,8 @@ class List_Table extends WP_List_Table {
             'posts_per_page' => 1,
             'fields'         => 'ids',
             'no_found_rows'  => false,
+            'meta_query'     => [],
+            'tax_query'      => [],
         ];
 
         switch ( $status ) {
@@ -337,6 +474,23 @@ class List_Table extends WP_List_Table {
             ];
         }
 
+        if ( ! empty( $this->tag_filter ) ) {
+            $args['tax_query'][] = [
+                'taxonomy' => Snippet_Post_Type::TAG_TAXONOMY,
+                'field'    => 'slug',
+                'terms'    => $this->tag_filter,
+                'operator' => 'AND',
+            ];
+        }
+
+        if ( empty( $args['meta_query'] ) ) {
+            unset( $args['meta_query'] );
+        }
+
+        if ( empty( $args['tax_query'] ) ) {
+            unset( $args['tax_query'] );
+        }
+
         $query = new WP_Query( $args );
         $count = (int) $query->found_posts;
         wp_reset_postdata();
@@ -351,7 +505,7 @@ class List_Table extends WP_List_Table {
             $url = admin_url( 'admin.php?page=sp-code-snippet' );
         }
 
-        return remove_query_arg( [ 'paged', 'sp_status', 'sp_type', 'orderby', 'order', 's' ], $url );
+        return remove_query_arg( [ 'paged', 'sp_status', 'sp_type', 'orderby', 'order', 's', 'sp_tags' ], $url );
     }
 
     protected function build_redirect_target(): string {
@@ -365,6 +519,10 @@ class List_Table extends WP_List_Table {
 
         if ( '' !== $this->search_term ) {
             $url = add_query_arg( 's', $this->search_term, $url );
+        }
+
+        if ( ! empty( $this->tag_filter ) ) {
+            $url = add_query_arg( 'sp_tags', implode( ',', $this->tag_filter ), $url );
         }
 
         $paged = $this->get_pagenum();
@@ -382,6 +540,28 @@ class List_Table extends WP_List_Table {
 
     protected function sanitize_type( string $type ): string {
         return array_key_exists( $type, self::TYPE_FILTERS ) ? $type : 'all';
+    }
+
+    protected function sanitize_tags( string $raw ): array {
+        if ( '' === $raw ) {
+            return [];
+        }
+
+        $parts = array_map(
+            static function ( $slug ) {
+                return sanitize_title( (string) $slug );
+            },
+            explode( ',', $raw )
+        );
+
+        $parts = array_filter(
+            array_unique( $parts ),
+            static function ( $slug ) {
+                return '' !== $slug;
+            }
+        );
+
+        return array_values( $parts );
     }
 
     protected function format_type_label( string $type ): string {
@@ -418,6 +598,36 @@ class List_Table extends WP_List_Table {
         $labels = array_map( 'esc_html', $labels );
 
         return implode( ', ', $labels );
+    }
+
+    protected function format_tags( array $tags ): string {
+        $all_tags = array_values(
+            array_filter(
+                array_map(
+                    static function ( $tag ) {
+                        return is_string( $tag ) ? trim( $tag ) : '';
+                    },
+                    $tags
+                )
+            )
+        );
+
+        if ( empty( $all_tags ) ) {
+            return '—';
+        }
+
+        $display = array_map(
+            static function ( $tag ) {
+                return esc_html( $tag );
+            },
+            array_slice( $all_tags, 0, 5 )
+        );
+
+        if ( count( $all_tags ) > 5 ) {
+            $display[] = '…';
+        }
+
+        return implode( ', ', $display );
     }
 
     protected function get_row_actions( array $item ): array {
@@ -507,6 +717,10 @@ class List_Table extends WP_List_Table {
         return esc_html( $this->format_type_label( $item['sp_type'] ) );
     }
 
+    protected function column_sp_tags( $item ): string {
+        return $this->format_tags( (array) ( $item['sp_tags'] ?? [] ) );
+    }
+
     protected function column_status( $item ): string {
         return esc_html( $this->format_status_label( $item['status'] ) );
     }
@@ -531,6 +745,3 @@ class List_Table extends WP_List_Table {
         return esc_html( $item[ $column_name ] ?? '' );
     }
 }
-
-
-

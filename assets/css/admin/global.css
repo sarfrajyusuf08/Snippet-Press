@@ -24,6 +24,43 @@ body[class*='snippetpress_page_sp-'] .wrap>hr.wp-header-end {
     margin-bottom: 24px;
 }
 
+.sp-tag-filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0 12px;
+}
+
+.sp-tag-filter-label {
+    font-weight: 600;
+    color: #334155;
+    font-size: 13px;
+}
+
+.sp-tag-filter__chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #1f2937;
+    font-size: 12px;
+    font-weight: 500;
+    text-decoration: none;
+    transition: background 0.2s ease, color 0.2s ease;
+}
+
+.sp-tag-filter__chip:hover {
+    background: #cbd5f5;
+    color: #1d4ed8;
+}
+
+.sp-tag-filter__chip--active {
+    background: #1d4ed8;
+    color: #fff;
+}
+
 body.toplevel_page_sp-code-snippet .card,
 body[class*='snippetpress_page_sp-'] .card {
     border-radius: 12px;

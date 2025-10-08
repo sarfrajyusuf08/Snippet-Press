@@ -13,6 +13,7 @@ use WP_Post;
 class Snippet_Post_Type extends Service_Provider {
     public const POST_TYPE = 'sp_snippet';
     public const TAXONOMY = 'sp_type';
+    public const TAG_TAXONOMY = 'sp_tag';
 
     /** @var Settings|null */
     protected $settings;
@@ -29,6 +30,7 @@ class Snippet_Post_Type extends Service_Provider {
 
         add_action( 'init', [ $this, 'register_post_type' ] );
         add_action( 'init', [ $this, 'register_taxonomy' ] );
+        add_action( 'init', [ $this, 'register_tag_taxonomy' ] );
         add_action( 'init', [ $this, 'register_meta' ] );
         add_filter( 'manage_edit-' . self::POST_TYPE . '_columns', [ $this, 'register_columns' ] );
         add_action( 'manage_' . self::POST_TYPE . '_posts_custom_column', [ $this, 'render_column' ], 10, 2 );
@@ -46,6 +48,7 @@ class Snippet_Post_Type extends Service_Provider {
     public function activate(): void {
         $this->register_post_type();
         $this->register_taxonomy();
+        $this->register_tag_taxonomy();
         $this->register_meta();
         $this->add_capabilities();
         flush_rewrite_rules();
@@ -106,6 +109,7 @@ class Snippet_Post_Type extends Service_Provider {
                 'capabilities'    => $capabilities,
                 'rewrite'         => false,
                 'menu_icon'       => 'dashicons-editor-code',
+                'taxonomies'      => [ self::TAG_TAXONOMY ],
             ]
         );
     }
@@ -136,6 +140,40 @@ class Snippet_Post_Type extends Service_Provider {
                 'show_admin_column' => true,
                 'hierarchical'      => false,
                 'rewrite'           => false,
+            ]
+        );
+    }
+
+    /**
+     * Register taxonomy for snippet tags.
+     */
+    public function register_tag_taxonomy(): void {
+        $labels = [
+            'name'          => __( 'Snippet Tags', 'snippet-press' ),
+            'singular_name' => __( 'Snippet Tag', 'snippet-press' ),
+            'search_items'  => __( 'Search Snippet Tags', 'snippet-press' ),
+            'popular_items' => __( 'Popular Snippet Tags', 'snippet-press' ),
+            'all_items'     => __( 'All Snippet Tags', 'snippet-press' ),
+            'edit_item'     => __( 'Edit Snippet Tag', 'snippet-press' ),
+            'update_item'   => __( 'Update Snippet Tag', 'snippet-press' ),
+            'add_new_item'  => __( 'Add New Snippet Tag', 'snippet-press' ),
+            'new_item_name' => __( 'New Snippet Tag Name', 'snippet-press' ),
+            'menu_name'     => __( 'Snippet Tags', 'snippet-press' ),
+        ];
+
+        register_taxonomy(
+            self::TAG_TAXONOMY,
+            self::POST_TYPE,
+            [
+                'labels'            => $labels,
+                'public'            => false,
+                'show_ui'           => true,
+                'show_admin_column' => false,
+                'show_in_quick_edit'=> false,
+                'hierarchical'      => false,
+                'show_tagcloud'     => false,
+                'rewrite'           => false,
+                'show_in_rest'      => true,
             ]
         );
     }
@@ -415,4 +453,3 @@ class Snippet_Post_Type extends Service_Provider {
         }
     }
 }
-

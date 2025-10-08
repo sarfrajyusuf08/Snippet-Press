@@ -259,6 +259,36 @@ body.post-type-sp_snippet #content:focus {
     align-self: flex-start;
 }
 
+.sp-field--tags .sp-snippet-tags__input {
+    max-width: 100%;
+}
+
+.sp-tag-suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.sp-tag-suggestion {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid #cbd5f5;
+    background: #eff6ff;
+    color: #1d4ed8;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.sp-tag-suggestion:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    color: #fff;
+}
+
 .sp-snippet-editor__section {
     background: #f8fbff;
     border: 1px solid #e2e8f0;
@@ -428,4 +458,3 @@ body.post-type-sp_snippet .screen-meta-links {
     transform: translateY(-1px);
     box-shadow: 0 15px 30px -18px rgba(37, 99, 235, 0.78);
 }
-

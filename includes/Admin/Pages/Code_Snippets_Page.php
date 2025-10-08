@@ -41,10 +41,18 @@ class Code_Snippets_Page extends Abstract_Admin_Page {
         echo '<hr class="wp-header-end" />';
 
         $list_table->render_type_tabs();
+        $list_table->render_tag_filters();
         $list_table->views();
 
-        echo '<form method="post">';
+        echo '<form method="get">';
+        echo '<input type="hidden" name="page" value="' . esc_attr( $this->slug() ) . '" />';
         $list_table->search_box( __( 'Search Snippets', 'snippet-press' ), 'sp-snippets' );
+        echo '<input type="hidden" name="sp_type" value="' . esc_attr( $list_table->current_type() ) . '" />';
+        echo '<input type="hidden" name="sp_status" value="' . esc_attr( $list_table->current_status() ) . '" />';
+        $current_tags = $list_table->current_tags();
+        if ( ! empty( $current_tags ) ) {
+            echo '<input type="hidden" name="sp_tags" value="' . esc_attr( implode( ',', $current_tags ) ) . '" />';
+        }
         $list_table->display();
         echo '</form>';
         echo '</div>';

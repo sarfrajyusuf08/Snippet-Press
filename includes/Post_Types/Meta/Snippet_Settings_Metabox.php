@@ -131,6 +131,30 @@ class Snippet_Settings_Metabox {
         $rules_summary     = $this->format_scope_rules_summary( $rules );
         $preview_details   = $this->determine_preview_link( $selected_scopes, $rules );
 
+        $tag_names      = wp_get_object_terms( $post->ID, Snippet_Post_Type::TAG_TAXONOMY, [ 'fields' => 'names' ] );
+        $tags_value     = implode( ', ', array_map( 'sanitize_text_field', (array) $tag_names ) );
+        $tag_terms      = get_terms(
+            [
+                'taxonomy'   => Snippet_Post_Type::TAG_TAXONOMY,
+                'hide_empty' => false,
+                'number'     => 20,
+                'orderby'    => 'count',
+                'order'      => 'DESC',
+            ]
+        );
+        $tag_suggestions = [];
+
+        if ( ! is_wp_error( $tag_terms ) ) {
+            $tag_suggestions = array_map(
+                static function ( $term ) {
+                    return $term->name;
+                },
+                $tag_terms
+            );
+        }
+
+        $tag_suggestions_json = wp_json_encode( $tag_suggestions );
+
         $preview_url     = $preview_details['url'];
         $preview_label   = $preview_details['label'];
         $preview_context = $preview_details['context'];
@@ -146,6 +170,10 @@ class Snippet_Settings_Metabox {
 
         if ( false === $preview_labels_json ) {
             $preview_labels_json = '{}';
+        }
+
+        if ( false === $tag_suggestions_json ) {
+            $tag_suggestions_json = '[]';
         }
 
         ?>
@@ -218,6 +246,19 @@ class Snippet_Settings_Metabox {
                             <?php endforeach; ?>
                         </div>
                     </div>
+
+                    <div class="sp-field sp-field--tags" data-tag-suggestions='<?php echo esc_attr( $tag_suggestions_json ); ?>'>
+                        <label class="sp-field__label" for="sp-snippet-tags"><?php esc_html_e( 'Tags', 'snippet-press' ); ?></label>
+                        <input type="text" id="sp-snippet-tags" class="sp-field__control sp-snippet-tags__input" name="sp_snippet_tags" value="<?php echo esc_attr( $tags_value ); ?>" placeholder="<?php esc_attr_e( 'analytics, footer, e-commerce', 'snippet-press' ); ?>" />
+                        <p class="sp-field__description"><?php esc_html_e( 'Separate tags with commas to group related snippets.', 'snippet-press' ); ?></p>
+                        <?php if ( ! empty( $tag_suggestions ) ) : ?>
+                            <div class="sp-tag-suggestions">
+                                <?php foreach ( $tag_suggestions as $suggestion ) : ?>
+                                    <button type="button" class="sp-tag-suggestion" data-tag="<?php echo esc_attr( $suggestion ); ?>"><?php echo esc_html( $suggestion ); ?></button>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
                 </section>
 
                 <section class="sp-snippet-editor__section sp-snippet-editor__section--advanced">
@@ -271,6 +312,7 @@ class Snippet_Settings_Metabox {
         }
 
         remove_meta_box( 'slugdiv', Snippet_Post_Type::POST_TYPE, 'normal' );
+        remove_meta_box( 'tagsdiv-' . Snippet_Post_Type::TAG_TAXONOMY, Snippet_Post_Type::POST_TYPE, 'side' );
     }
 
     public function save( int $post_id, WP_Post $post, bool $update ): void {
@@ -329,6 +371,28 @@ class Snippet_Settings_Metabox {
         if ( isset( $_POST['sp_scope_rules'] ) && is_array( $_POST['sp_scope_rules'] ) ) {
             $normalized = self::normalize_scope_rules( (array) wp_unslash( $_POST['sp_scope_rules'] ) );
             update_post_meta( $post_id, '_sp_scope_rules', empty( $normalized ) ? '' : wp_json_encode( $normalized ) );
+        }
+
+        if ( isset( $_POST['sp_snippet_tags'] ) ) {
+            $raw_tags = (string) wp_unslash( $_POST['sp_snippet_tags'] );
+            $pieces   = preg_split( '/[,]+/', $raw_tags ) ?: [];
+
+            $tags = array_filter(
+                array_unique(
+                    array_map(
+                        static function ( $tag ) {
+                            $tag = trim( (string) $tag );
+                            return $tag === '' ? '' : sanitize_text_field( $tag );
+                        },
+                        $pieces
+                    )
+                ),
+                static function ( $tag ) {
+                    return '' !== $tag;
+                }
+            );
+
+            wp_set_post_terms( $post_id, $tags, Snippet_Post_Type::TAG_TAXONOMY, false );
         }
     }
 

@@ -370,6 +370,46 @@
             $(document).on('change', 'input[name="sp_snippet_scopes[]"]', refreshScopePreview);
         }
 
+        var $tagField = $('.sp-field--tags');
+
+        if ($tagField.length) {
+            var $tagInput = $tagField.find('.sp-snippet-tags__input');
+
+            function parseInputTags(value) {
+                if (!value) {
+                    return [];
+                }
+
+                return value.split(',').map(function (item) {
+                    return item.trim();
+                }).filter(function (item) {
+                    return item !== '';
+                });
+            }
+
+            function writeTags(tags) {
+                $tagInput.val(tags.join(', ')).trigger('change');
+            }
+
+            $tagField.on('click', '.sp-tag-suggestion', function (event) {
+                event.preventDefault();
+
+                var tag = $(this).data('tag');
+
+                if (!tag || !$tagInput.length) {
+                    return;
+                }
+
+                var existing = parseInputTags($tagInput.val());
+                var lower = existing.map(function (item) { return item.toLowerCase(); });
+
+                if (lower.indexOf(tag.toLowerCase()) === -1) {
+                    existing.push(tag);
+                    writeTags(existing);
+                }
+            });
+        }
+
         if ($title.length) {
             $title.attr('placeholder', $title.attr('placeholder') || 'Add a title for your snippet');
         }
