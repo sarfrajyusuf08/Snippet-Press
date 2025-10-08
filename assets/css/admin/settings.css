@@ -8,6 +8,7 @@
     margin-top: 20px;
 }
 
+<<<<<<< HEAD
 .sp-safe-mode-log {
     margin-top: 20px;
 }
@@ -38,6 +39,8 @@
     color: #64748b;
 }
 
+=======
+>>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644
 .sp-search-replace__panels {
     margin-top: 24px;
     display: grid;
@@ -419,4 +422,8 @@
         width: 100%;
         justify-content: center;
     }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644

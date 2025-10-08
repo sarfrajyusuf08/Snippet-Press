@@ -222,6 +222,7 @@ class Settings_Page extends Abstract_Admin_Page {
 
         echo '</div>';
         echo '</div>';
+<<<<<<< HEAD
 
         $manager     = $this->container()->get( Safe_Mode_Manager::class );
         $log_entries = $manager instanceof Safe_Mode_Manager ? $manager->get_log() : [];
@@ -320,6 +321,8 @@ class Settings_Page extends Abstract_Admin_Page {
         }
 
         return __( 'Unknown', 'snippet-press' );
+=======
+>>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644
     }
 
     protected function render_linting_tab( array $settings, string $active ): void {

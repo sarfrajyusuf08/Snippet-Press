@@ -100,6 +100,7 @@ class Safe_Mode_Manager extends Service_Provider {
             $this->enable_safe_mode( $this->last_snippet_id, $error_message );
             $this->quarantine_snippet( $this->last_snippet_id );
             $this->add_activation_notice( $this->last_snippet_id, $error_message );
+<<<<<<< HEAD
             $this->record_log_entry(
                 [
                     'timestamp'   => time(),
@@ -121,6 +122,11 @@ class Safe_Mode_Manager extends Service_Provider {
                     'current_url' => isset( $_SERVER['REQUEST_URI'] ) ? wp_unslash( (string) $_SERVER['REQUEST_URI'] ) : '',
                 ]
             );
+=======
+        } else {
+            $this->enable_safe_mode( 0, $error_message );
+            $this->add_activation_notice( 0, $error_message );
+>>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644
         }
 
         $this->clear_tracked_snippet();
@@ -234,6 +240,7 @@ class Safe_Mode_Manager extends Service_Provider {
 
         $this->enable_safe_mode();
         Notices::add( __( 'Safe mode enabled. Snippet execution is paused until you disable it.', 'snippet-press' ), 'warning' );
+<<<<<<< HEAD
         $this->record_log_entry(
             [
                 'timestamp'  => time(),
@@ -242,6 +249,8 @@ class Safe_Mode_Manager extends Service_Provider {
                 'message'    => __( 'Safe mode manually enabled.', 'snippet-press' ),
             ]
         );
+=======
+>>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644
 
         $redirect = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '';
         if ( ! $redirect ) {
@@ -301,6 +310,7 @@ class Safe_Mode_Manager extends Service_Provider {
 
         $this->update_state( $state );
     }
+<<<<<<< HEAD
 
     /**
      * Return the safe mode event log.
@@ -340,3 +350,7 @@ class Safe_Mode_Manager extends Service_Provider {
         update_option( self::SAFE_MODE_LOG_OPTION, $log );
     }
 }
+=======
+}
+
+>>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644
