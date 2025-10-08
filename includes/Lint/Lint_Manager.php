@@ -89,7 +89,11 @@ class Lint_Manager extends Service_Provider {
         $binary_escaped = escapeshellcmd( $binary );
 
         if ( false !== strpos( $binary, ' ' ) ) {
-            $binary_escaped = '"' . str_replace( '"', '\"', $binary_escaped ) . '"';
+            if ( DIRECTORY_SEPARATOR === '\\' ) {
+                $binary_escaped = '"' . str_replace( '"', '""', $binary ) . '"';
+            } else {
+                $binary_escaped = escapeshellarg( $binary );
+            }
         }
 
         $command = $binary_escaped . ' -l ' . escapeshellarg( $temp_file );
@@ -176,6 +180,10 @@ class Lint_Manager extends Service_Provider {
             if ( ! empty( $all['php_binary_path'] ) ) {
                 return (string) $all['php_binary_path'];
             }
+        }
+
+        if ( defined( 'PHP_BINARY' ) && PHP_BINARY ) {
+            return PHP_BINARY;
         }
 
         return 'php';

@@ -227,12 +227,50 @@
         var $scopePreview = $('.sp-snippet-scope-preview');
 
         if ($scopePreview.length) {
-            var scopeLabels = $scopePreview.data('scopeLabels') || {};
+            function parseDataObject(rawValue, fallback) {
+                if (typeof rawValue === 'string') {
+                    try {
+                        rawValue = JSON.parse(rawValue);
+                    } catch (err) {
+                        rawValue = undefined;
+                    }
+                }
+
+                if (!$.isPlainObject(rawValue)) {
+                    rawValue = $.isPlainObject(fallback) ? $.extend({}, fallback) : fallback;
+                }
+
+                return rawValue || {};
+            }
+
+            function escapeHtml(str) {
+                return (str || '').replace(/[&<>"']/g, function (ch) {
+                    switch (ch) {
+                        case '&':
+                            return '&amp;';
+                        case '<':
+                            return '&lt;';
+                        case '>':
+                            return '&gt;';
+                        case '"':
+                            return '&quot;';
+                        case "'":
+                            return '&#39;';
+                        default:
+                            return ch;
+                    }
+                });
+            }
+
+            var scopeLabels = parseDataObject($scopePreview.data('scopeLabels'), {});
+            var previewLabels = parseDataObject($scopePreview.data('previewLabels'), {});
             var emptyLabel = $scopePreview.data('emptyLabel') || 'Select scopes to see where this snippet runs.';
             var previewLocked = parseInt($scopePreview.data('previewLocked'), 10) === 1;
-            var previewLabels = $scopePreview.data('previewLabels') || {};
 
-            previewLabels.default = previewLabels.default || ($scopePreview.find('.sp-snippet-scope-preview__link').text() || 'Preview sample page');
+            if (!previewLabels.default) {
+                var initialText = $scopePreview.find('.sp-snippet-scope-preview__link').text();
+                previewLabels.default = initialText || 'Preview sample page';
+            }
 
             var previewUrls = {
                 home: $scopePreview.data('previewHome') || '',
@@ -246,25 +284,15 @@
             var $previewLink = $scopePreview.find('.sp-snippet-scope-preview__link');
             var $scopeInputs = $('input[name="sp_snippet_scopes[]"]');
 
-            function escapeHtml(str) {
-                return (str || '').replace(/[&<>"']/g, function (ch) {
-                    switch (ch) {
-                        case '&': return '&amp;';
-                        case '<': return '&lt;';
-                        case '>': return '&gt;';
-                        case '"': return '&quot;';
-                        case "'": return '&#39;';
-                        default: return ch;
-                    }
-                });
-            }
-
             function uniqueScopes(scopes) {
                 var seen = {};
                 return scopes.filter(function (scope) {
+                    scope = scope || '';
+
                     if (seen[scope]) {
                         return false;
                     }
+
                     seen[scope] = true;
                     return true;
                 });
