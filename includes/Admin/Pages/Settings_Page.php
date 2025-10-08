@@ -79,7 +79,6 @@ class Settings_Page extends Abstract_Admin_Page {
 
         echo '</div>';
         echo '</div>';
-        echo '</div>';
     }
 
     protected function render_tabs( array $tabs, string $active ): void {
@@ -227,7 +226,7 @@ class Settings_Page extends Abstract_Admin_Page {
         $log_entries = $manager instanceof Safe_Mode_Manager ? $manager->get_log() : [];
         $empty_value = '&mdash;';
 
-        $output  = '<div class="sp-panel sp-safe-mode-log">';
+        $output  = '<div class="sp-panel sp-safe-mode-log" aria-live="polite">';
         $output .= '<h2>' . esc_html__( 'Recent Safe Mode Activity', 'snippet-press' ) . '</h2>';
 
         if ( empty( $log_entries ) ) {

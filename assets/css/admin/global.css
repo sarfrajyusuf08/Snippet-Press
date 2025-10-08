@@ -9,7 +9,7 @@ body[class*='snippetpress_page_sp-'] #wpbody-content {
 body.toplevel_page_sp-code-snippet .wrap,
 body[class*='snippetpress_page_sp-'] .wrap {
     margin: 0 auto;
-    padding: 28px 32px 48px;
+    padding: 28px 32px 96px;
     max-width: 1100px;
 }
 
