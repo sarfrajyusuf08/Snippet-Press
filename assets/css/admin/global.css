@@ -1,11 +1,12 @@
 
 
-/* Global Snippet Press admin page styling */
+/* Light background for every Snippet Press admin page */
 body.toplevel_page_sp-code-snippet #wpbody-content,
 body[class*='snippetpress_page_sp-'] #wpbody-content {
     background: #f5f7fb;
 }
 
+/* Constrain and pad the main admin content column */
 body.toplevel_page_sp-code-snippet .wrap,
 body[class*='snippetpress_page_sp-'] .wrap {
     margin: 0 auto;
@@ -13,17 +14,20 @@ body[class*='snippetpress_page_sp-'] .wrap {
     max-width: 1100px;
 }
 
+/* Headline styling for each admin screen */
 body.toplevel_page_sp-code-snippet .wrap>h1,
 body[class*='snippetpress_page_sp-'] .wrap>h1 {
     font-weight: 600;
     color: #0f172a;
 }
 
+/* Extra breathing room under the header divider */
 body.toplevel_page_sp-code-snippet .wrap>hr.wp-header-end,
 body[class*='snippetpress_page_sp-'] .wrap>hr.wp-header-end {
     margin-bottom: 24px;
 }
 
+/* Container for tag filter chips on the library view */
 .sp-tag-filter-bar {
     display: flex;
     flex-wrap: wrap;
@@ -32,12 +36,14 @@ body[class*='snippetpress_page_sp-'] .wrap>hr.wp-header-end {
     margin: 16px 0 12px;
 }
 
+/* Label for the tag filter bar */
 .sp-tag-filter-label {
     font-weight: 600;
     color: #334155;
     font-size: 13px;
 }
 
+/* Individual pill-shaped tag selector */
 .sp-tag-filter__chip {
     display: inline-flex;
     align-items: center;
@@ -51,16 +57,19 @@ body[class*='snippetpress_page_sp-'] .wrap>hr.wp-header-end {
     transition: background 0.2s ease, color 0.2s ease;
 }
 
+/* Hover feedback for tag chips */
 .sp-tag-filter__chip:hover {
     background: #cbd5f5;
     color: #1d4ed8;
 }
 
+/* Selected tag chip styling */
 .sp-tag-filter__chip--active {
     background: #1d4ed8;
     color: #fff;
 }
 
+/* Shared card styling across admin widgets */
 body.toplevel_page_sp-code-snippet .card,
 body[class*='snippetpress_page_sp-'] .card {
     border-radius: 12px;
@@ -70,6 +79,7 @@ body[class*='snippetpress_page_sp-'] .card {
 }
 
 
+/* Hide media buttons for the custom snippet editor */
 body.post-type-sp_snippet #insert-media-button,
 body.post-type-sp_snippet #content_wp_editor_tools,
 body.post-type-sp_snippet #content_wp_fullscreen_toolbar,
@@ -77,6 +87,7 @@ body.post-type-sp_snippet .quicktags-toolbar {
     display: none !important;
 }
 
+/* Inline badge showing performance status */
 .sp-performance-metric {
     display: inline-flex;
     align-items: center;
@@ -84,24 +95,29 @@ body.post-type-sp_snippet .quicktags-toolbar {
     font-weight: 600;
 }
 
+/* Timestamp text under performance badge */
 .sp-performance-metric + .sp-performance-meta {
     margin-top: 4px;
 }
 
+/* Secondary text style for performance details */
 .sp-performance-meta {
     display: block;
     font-size: 12px;
     color: #64748b;
 }
 
+/* Styling for healthy snippet timings */
 .sp-performance-ok {
     color: #047857;
 }
 
+/* Styling for slow snippet timings */
 .sp-performance-slow {
     color: #b91c1c;
 }
 
+/* Wrapper for the onboarding checklist card */
 .sp-onboarding-card {
     margin-bottom: 24px;
     padding: 24px;
@@ -113,6 +129,7 @@ body.post-type-sp_snippet .quicktags-toolbar {
     gap: 20px;
 }
 
+/* Header row of the onboarding card */
 .sp-onboarding-card__header {
     display: flex;
     justify-content: space-between;
@@ -120,21 +137,25 @@ body.post-type-sp_snippet .quicktags-toolbar {
     gap: 16px;
 }
 
+/* Onboarding card title */
 .sp-onboarding-card__header h2 {
     margin: 0 0 6px;
     font-size: 20px;
     font-weight: 600;
 }
 
+/* Supporting copy in the onboarding header */
 .sp-onboarding-card__header p {
     margin: 0;
     color: #475569;
 }
 
+/* Container for the dismiss button */
 .sp-onboarding-card__dismiss {
     margin: 0;
 }
 
+/* Stylised × button for dismissing onboarding */
 .sp-onboarding-card__dismiss-button {
     font-size: 24px;
     line-height: 1;
@@ -143,11 +164,13 @@ body.post-type-sp_snippet .quicktags-toolbar {
     text-decoration: none;
 }
 
+/* Hover/focus state for dismissal control */
 .sp-onboarding-card__dismiss-button:hover,
 .sp-onboarding-card__dismiss-button:focus {
     color: #1d4ed8;
 }
 
+/* Checklist list container */
 .sp-onboarding-card__steps {
     margin: 0;
     padding: 0;
@@ -156,6 +179,7 @@ body.post-type-sp_snippet .quicktags-toolbar {
     gap: 18px;
 }
 
+/* Individual checklist row */
 .sp-onboarding-card__steps li {
     display: grid;
     gap: 8px;
@@ -165,34 +189,41 @@ body.post-type-sp_snippet .quicktags-toolbar {
     background: #f8fafc;
 }
 
+/* Checklist item title */
 .sp-onboarding-card__step-title {
     font-weight: 600;
     color: #0f172a;
 }
 
+/* Checklist item description */
 .sp-onboarding-card__step-desc {
     color: #475569;
 }
 
+/* Action buttons inside the onboarding list */
 .sp-onboarding-card__steps .button {
     align-self: flex-start;
     width: fit-content;
 }
 
 @media (max-width: 782px) {
+    /* Compact padding for the onboarding card on mobile */
     .sp-onboarding-card {
         padding: 20px;
     }
 
+    /* Stack header content vertically on mobile */
     .sp-onboarding-card__header {
         flex-direction: column;
         align-items: stretch;
     }
 
+    /* Slimmer checklist cards on narrow viewports */
     .sp-onboarding-card__steps li {
         padding: 14px;
     }
 
+    /* Make onboarding buttons span full width on mobile */
     .sp-onboarding-card__steps .button {
         width: 100%;
         text-align: center;
