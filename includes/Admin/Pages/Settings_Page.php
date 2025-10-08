@@ -222,26 +222,27 @@ class Settings_Page extends Abstract_Admin_Page {
 
         echo '</div>';
         echo '</div>';
-<<<<<<< HEAD
 
         $manager     = $this->container()->get( Safe_Mode_Manager::class );
         $log_entries = $manager instanceof Safe_Mode_Manager ? $manager->get_log() : [];
+        $empty_value = '&mdash;';
 
-        echo '<div class="sp-panel sp-safe-mode-log">';
-        echo '<h2>' . esc_html__( 'Recent Safe Mode Activity', 'snippet-press' ) . '</h2>';
+        $output  = '<div class="sp-panel sp-safe-mode-log">';
+        $output .= '<h2>' . esc_html__( 'Recent Safe Mode Activity', 'snippet-press' ) . '</h2>';
 
         if ( empty( $log_entries ) ) {
-            echo '<p class="description">' . esc_html__( 'Safe mode has not been triggered yet.', 'snippet-press' ) . '</p>';
+            $output .= '<p class="description">' . esc_html__( 'Safe mode has not been triggered yet.', 'snippet-press' ) . '</p>';
         } else {
-            echo '<p class="description">' . esc_html__( 'Track when safe mode was enabled or disabled and which snippet caused it.', 'snippet-press' ) . '</p>';
-            echo '<div class="sp-table-wrapper">';
-            echo '<table class="widefat striped sp-safe-mode-log__table">';
-            echo '<thead><tr>';
-            echo '<th scope="col">' . esc_html__( 'When', 'snippet-press' ) . '</th>';
-            echo '<th scope="col">' . esc_html__( 'Trigger', 'snippet-press' ) . '</th>';
-            echo '<th scope="col">' . esc_html__( 'Snippet', 'snippet-press' ) . '</th>';
-            echo '<th scope="col">' . esc_html__( 'Details', 'snippet-press' ) . '</th>';
-            echo '</tr></thead><tbody>';
+            $output .= '<p class="description">' . esc_html__( 'Track when safe mode was enabled or disabled and which snippet caused it.', 'snippet-press' ) . '</p>';
+            $output .= '<div class="sp-table-wrapper"><table class="widefat striped sp-safe-mode-log__table">';
+            $output .= '<thead><tr>';
+            $output .= '<th scope="col">' . esc_html__( 'When', 'snippet-press' ) . '</th>';
+            $output .= '<th scope="col">' . esc_html__( 'Trigger', 'snippet-press' ) . '</th>';
+            $output .= '<th scope="col">' . esc_html__( 'Snippet', 'snippet-press' ) . '</th>';
+            $output .= '<th scope="col">' . esc_html__( 'Details', 'snippet-press' ) . '</th>';
+            $output .= '</tr></thead>';
+
+            $rows = [];
 
             foreach ( $log_entries as $entry ) {
                 $timestamp  = isset( $entry['timestamp'] ) ? (int) $entry['timestamp'] : 0;
@@ -251,59 +252,56 @@ class Settings_Page extends Abstract_Admin_Page {
                 $message    = isset( $entry['message'] ) ? (string) $entry['message'] : '';
                 $url        = isset( $entry['current_url'] ) ? (string) $entry['current_url'] : '';
 
-                $trigger_label = $this->log_trigger_label( $trigger );
-                $time_display  = $timestamp ? esc_html( wp_date( sprintf( '%s %s', get_option( 'date_format' ), get_option( 'time_format' ) ), $timestamp ) ) : '&#8212;';
+                $trigger_label      = $this->log_trigger_label( $trigger );
+                $trigger_label_safe = esc_html( $trigger_label );
+                $time_display       = $timestamp
+                    ? esc_html( wp_date( sprintf( '%s %s', get_option( 'date_format' ), get_option( 'time_format' ) ), $timestamp ) )
+                    : $empty_value;
 
-                $snippet_cell = '&#8212;';
+                $snippet_cell = $empty_value;
 
                 if ( $snippet_id ) {
                     $title = get_the_title( $snippet_id );
 
                     if ( $title ) {
-                        $link = get_edit_post_link( $snippet_id, 'display' );
-                        $snippet_cell = $link ? sprintf( '<a href="%1$s">%2$s</a>', esc_url( $link ), esc_html( $title ) ) : esc_html( $title );
+                        $link         = get_edit_post_link( $snippet_id, 'display' );
+                        $snippet_cell = $link
+                            ? sprintf( '<a href="%1$s">%2$s</a>', esc_url( $link ), esc_html( $title ) )
+                            : esc_html( $title );
                     }
                 }
 
-                $details = '';
+                $details_parts = [];
 
                 if ( '' !== $message ) {
-                    $details .= esc_html( $message );
+                    $details_parts[] = esc_html( $message );
                 }
 
                 if ( '' !== $error ) {
-                    if ( '' !== $details ) {
-                        $details .= '<br>';
-                    }
-
-                    $details .= '<code>' . esc_html( $error ) . '</code>';
+                    $details_parts[] = '<code>' . esc_html( $error ) . '</code>';
                 }
 
                 if ( '' !== $url ) {
-                    if ( '' !== $details ) {
-                        $details .= '<br>';
-                    }
-
-                    $details .= sprintf( '<span class="sp-safe-mode-log__url">%s</span>', esc_html( $url ) );
+                    $details_parts[] = '<span class="sp-safe-mode-log__url">' . esc_html( $url ) . '</span>';
                 }
 
-                if ( '' === $details ) {
-                    $details = '&#8212;';
-                }
+                $details = ! empty( $details_parts ) ? implode( '<br>', $details_parts ) : $empty_value;
 
-                echo '<tr>';
-                echo '<td>' . $time_display . '</td>';
-                echo '<td>' . esc_html( $trigger_label ) . '</td>';
-                echo '<td>' . $snippet_cell . '</td>';
-                echo '<td>' . $details . '</td>';
-                echo '</tr>';
+                $rows[] = sprintf(
+                    '<tr><td>%1$s</td><td>%2$s</td><td>%3$s</td><td>%4$s</td></tr>',
+                    $time_display,
+                    $trigger_label_safe,
+                    $snippet_cell,
+                    $details
+                );
             }
 
-            echo '</tbody></table>';
-            echo '</div>';
+            $output .= '<tbody>' . implode( '', $rows ) . '</tbody></table></div>';
         }
 
-        echo '</div>';
+        $output .= '</div>';
+
+        echo $output; // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped
     }
 
 
@@ -321,8 +319,6 @@ class Settings_Page extends Abstract_Admin_Page {
         }
 
         return __( 'Unknown', 'snippet-press' );
-=======
->>>>>>> e098c42ed0a01e1fb96106f989047a13409f3644
     }
 
     protected function render_linting_tab( array $settings, string $active ): void {
