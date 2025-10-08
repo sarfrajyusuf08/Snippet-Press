@@ -1,14 +1,17 @@
 /* Admin shared components and library layout */
 
+/* Space above the tab row on the add snippet page */
 .sp-add-snippet-page .sp-tabs-wrapper {
     margin-bottom: 20px;
 }
 
+/* Horizontal tab bar styling */
 .sp-tabs {
     display: flex;
     border-bottom: 1px solid #ccd0d4;
 }
 
+/* Base look for each tab link */
 .sp-tab {
     padding: 10px 20px;
     text-decoration: none;
@@ -18,41 +21,49 @@
     margin-bottom: -1px;
 }
 
+/* Active tab appearance */
 .sp-tab-active {
     border-color: #ccd0d4;
     border-bottom-color: #f0f0f1;
     background: #f0f0f1;
 }
 
+/* Wrapper for the entire library content */
 .sp-snippet-library {
     display: flex;
     flex-direction: column;
 }
 
+/* Header bar spacing */
 .sp-library-header {
     margin-bottom: 20px;
 }
 
+/* Two-column layout (sidebar + main grid) */
 .sp-library-body {
     display: grid;
     grid-template-columns: 240px 1fr;
     gap: 20px;
 }
 
+/* Search box spacing inside sidebar */
 .sp-library-sidebar .sp-search-box {
     margin-bottom: 15px;
 }
 
+/* Stretch the search input */
 .sp-library-sidebar .sp-search-box input {
     width: 100%;
 }
 
+/* Reset list styles for categories */
 .sp-category-list {
     margin: 0;
     padding: 0;
     list-style: none;
 }
 
+/* Individual category link styling */
 .sp-category-list li a {
     display: flex;
     justify-content: space-between;
@@ -63,15 +74,18 @@
     border-radius: 3px;
 }
 
+/* Hover highlight for category links */
 .sp-category-list li a:hover {
     background: #f0f0f1;
 }
 
+/* Active category state */
 .sp-category-list li a.active {
     background: #e0e0e0;
     font-weight: 600;
 }
 
+/* Badge showing how many snippets per category */
 .sp-category-list .count {
     background: #e0e0e0;
     padding: 2px 6px;
@@ -80,12 +94,14 @@
     color: #555;
 }
 
+/* Responsive grid of snippet cards */
 .sp-library-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
     gap: 20px;
 }
 
+/* Header row above the grid */
 .sp-grid-header {
     grid-column: 1 / -1;
     display: grid;
@@ -94,6 +110,7 @@
     margin-bottom: 20px;
 }
 
+/* Card styling for each snippet entry */
 .sp-grid-item {
     background: #fff;
     border: 1px solid #ccd0d4;
@@ -102,6 +119,7 @@
     flex-direction: column;
 }
 
+/* Snippet title row within the card */
 .sp-grid-item h3 {
     margin-top: 0;
     display: flex;
@@ -109,10 +127,12 @@
     align-items: center;
 }
 
+/* Description area inside the card */
 .sp-grid-item p {
     flex-grow: 1;
 }
 
+/* Highlight badge for pro-only snippets */
 .sp-grid-item .pro-badge {
     font-size: 10px;
     background: #ffb900;
@@ -122,6 +142,7 @@
     font-weight: bold;
 }
 
+/* Footer row with actions and status */
 .sp-grid-item-footer {
     display: flex;
     justify-content: space-between;
@@ -129,6 +150,7 @@
     margin-top: 15px;
 }
 
+/* Tag chip styling inside snippet cards */
 .sp-tags .sp-tag {
     background: #f0f0f1;
     padding: 3px 8px;
@@ -137,25 +159,30 @@
     margin-right: 5px;
 }
 
+/* Spacing for snippet type tabs */
 .sp-type-tabs {
     margin-bottom: 1rem;
 }
 
+/* Status color for enabled snippets */
 .status-enabled {
     color: #0a8;
     font-weight: 600;
 }
 
+/* Status color for disabled snippets */
 .status-disabled {
     color: #a00;
     font-weight: 600;
 }
 
+/* Heading above template groups */
 .sp-template-group-heading {
     margin: 0.75rem 0 0.75rem;
     font-size: 1.3rem;
 }
 
+/* Grid layout for template cards */
 .sp-template-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
@@ -164,6 +191,7 @@
     margin-bottom: 60px;
 }
 
+/* Card styling for default templates */
 .sp-template-card {
     background: #fff;
     border: 1px solid #dcdcde;
@@ -172,33 +200,39 @@
     padding: 1.25rem;
 }
 
+/* Template title */
 .sp-template-card h3 {
     margin-top: 0;
     margin-bottom: 0.5rem;
 }
 
+/* Metadata line under template title */
 .sp-template-meta {
     margin: 0 0 0.4rem;
     font-size: 13px;
     color: #50575e;
 }
 
+/* Bullet list of template highlights */
 .sp-template-highlights {
     margin: 0.75rem 0 1rem 1.2rem;
     padding: 0;
     list-style: disc;
 }
 
+/* Container for collapsible code preview */
 .sp-template-code {
     margin-top: 1rem;
 }
 
+/* Summary row for code accordion */
 .sp-template-code summary {
     cursor: pointer;
     font-weight: 600;
     color: #3858e9;
 }
 
+/* Code block styling inside the template accordion */
 .sp-template-code pre {
     background: #f6f7f7;
     border: 1px solid #dcdcde;
@@ -208,10 +242,12 @@
     overflow: auto;
 }
 
+/* Button row at the bottom of each template card */
 .sp-template-actions {
     margin-top: 1.25rem;
 }
 
+/* Welcome panel at the top of Add Snippet page */
 .sp-add-snippet__header {
     background: #fff;
     border: 1px solid #dcdcde;
@@ -221,20 +257,24 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+/* Subtitle text in the welcome panel */
 .sp-add-snippet__header p {
     margin: 0.5rem 0 0;
     color: #50575e;
 }
 
+/* Spacing beneath the add snippet tabs */
 .sp-add-snippet__tabs {
     margin-bottom: 24px;
 }
 
+/* Two-column layout for curated library */
 .sp-library-layout {
     display: flex;
     gap: 24px;
 }
 
+/* Sidebar container for filters */
 .sp-library-sidebar {
     flex: 0 0 220px;
     background: #fff;
@@ -244,6 +284,7 @@
     height: fit-content;
 }
 
+/* Search input within the library sidebar */
 .sp-library-search {
     width: 100%;
     margin-bottom: 16px;
@@ -252,6 +293,7 @@
     border: 1px solid #dcdcde;
 }
 
+/* Reset and layout for the filter list */
 .sp-library-filter-list {
     list-style: none;
     margin: 0;
@@ -260,6 +302,7 @@
     gap: 6px;
 }
 
+/* Individual filter chip in the list */
 .sp-library-filter {
     transition: background 0.2s ease, color 0.2s ease;
     display: flex;
@@ -273,21 +316,25 @@
     font-weight: 500;
 }
 
+/* Hover state for filter chip */
 .sp-library-filter:hover {
     background: #eef2ff;
     color: #3858e9;
 }
 
+/* Active state for filter chip */
 .sp-library-filter.is-active {
     background: #eef2ff;
     color: #3858e9;
 }
 
+/* Count badge inside filter chip */
 .sp-library-filter__count {
     font-size: 12px;
     color: #50575e;
 }
 
+/* Heading labels inside the sidebar filter groups */
 .sp-library-filter-heading {
     margin: 24px 0 8px;
     font-size: 11px;
@@ -297,18 +344,22 @@
     color: #50575e;
 }
 
+/* Tag filter list tweaks */
 .sp-library-filter-list--tags {
     margin-top: 8px;
 }
 
+/* Smaller font for tag filters */
 .sp-library-filter-list--tags .sp-library-filter {
     font-size: 13px;
 }
 
+/* Main catalog column next to sidebar */
 .sp-library-catalog {
     flex: 1;
 }
 
+/* Informational callout inside the catalog */
 .sp-library-note {
     margin: 16px 0 16px;
     padding: 16px 20px;
@@ -318,6 +369,7 @@
     color: #1d2327;
 }
 
+/* Inline code styling within the note */
 .sp-library-note code {
     font-family: Menlo, Consolas, 'Liberation Mono', monospace;
     background: #e2e8f0;
@@ -325,18 +377,22 @@
     border-radius: 4px;
 }
 
+/* Space between template sections */
 .sp-template-section+.sp-template-section {
     margin-top: 48px;
 }
 
+/* Adjust heading spacing inside template sections */
 .sp-template-section .sp-template-group-heading {
     margin-bottom: 12px;
 }
 
+/* Top margin for template grids */
 .sp-template-section .sp-template-grid {
     margin-top: 16px;
 }
 
+/* Empty state panel styling */
 .sp-empty-panel {
     background: #fff;
     border: 1px solid #dcdcde;
@@ -348,24 +404,29 @@
 
 
 
+/* Make template action buttons fill card width */
 .sp-template-actions .button {
     width: 100%;
     text-align: center;
 }
 
+/* Style individual nav tabs on Add Snippet page */
 .sp-add-snippet__tabs .nav-tab {
     font-size: 14px;
     padding: 8px 16px;
 }
 
+/* Active tab styling on Add Snippet */
 .sp-add-snippet__tabs .nav-tab-active {
     background: #fff;
 }
 
+/* Space above the add snippet body content */
 .sp-add-snippet__body {
     margin-top: 24px;
 }
 
+/* Layout tweaks for CTA template cards */
 .sp-template-card--cta {
     display: flex;
     flex-direction: column;
@@ -373,19 +434,23 @@
     min-height: 100%;
 }
 
+/* Push CTA actions to card bottom */
 .sp-template-card--cta .sp-template-actions {
     margin-top: auto;
 }
 
+/* Allow CTA buttons to shrink */
 .sp-template-card--cta .button {
     width: auto;
 }
 
+/* Disabled state for CTA buttons */
 .sp-template-card--cta button[disabled] {
     cursor: not-allowed;
     opacity: 0.6;
 }
 
+/* Pill tag layout for CTA cards */
 .sp-tags {
     display: flex;
     flex-wrap: wrap;
@@ -393,6 +458,7 @@
     margin-top: 0.75rem;
 }
 
+/* Individual pill tag styling */
 .sp-tags .sp-tag {
     background: #eef2ff;
     color: #1d2327;
@@ -402,15 +468,18 @@
     font-weight: 500;
 }
 
+/* Remove extra spacing around empty state title */
 .sp-empty-panel h2 {
     margin-top: 0;
 }
 
+/* Disabled button styling inside empty states */
 .sp-empty-panel .button[disabled] {
     cursor: not-allowed;
     opacity: 0.6;
 }
 
+/* Layout for File Editor main body (sidebar + editor) */
 .sp-file-editor-page .sp-file-editor__body {
     display: grid;
     grid-template-columns: 280px 1fr;
@@ -418,6 +487,7 @@
     margin-top: 24px;
 }
 
+/* Shared panel styling reused across admin pages */
 .sp-panel {
     background: #fff;
     border: 1px solid #dcdcde;
@@ -426,10 +496,12 @@
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
+/* Space between stacked panels */
 .sp-panel+.sp-panel {
     margin-top: 20px;
 }
 
+/* Panel header layout */
 .sp-panel__header {
     display: flex;
     justify-content: space-between;
@@ -437,6 +509,7 @@
     margin-bottom: 16px;
 }
 
+/* Generic badge styling */
 .sp-badge {
     display: inline-flex;
     align-items: center;
@@ -448,17 +521,20 @@
     text-transform: uppercase;
 }
 
+/* Variant badge colour for "Soon" tags */
 .sp-badge--soon {
     background: #eef2ff;
     color: #3858e9;
 }
 
+/* Sidebar column inside the File Editor */
 .sp-file-editor__sidebar {
     display: flex;
     flex-direction: column;
     gap: 20px;
 }
 
+/* Quick link list styling */
 .sp-file-editor__quick-links {
     list-style: none;
     margin: 0;
@@ -467,11 +543,13 @@
     gap: 10px;
 }
 
+/* Disabled quick link buttons */
 .sp-file-editor__quick-links .button[disabled] {
     cursor: not-allowed;
     opacity: 0.6;
 }
 
+/* Tree-style list of editable files */
 .sp-file-editor__tree {
     list-style: none;
     margin: 16px 0 0;
@@ -480,6 +558,7 @@
     gap: 6px;
 }
 
+/* Individual file entry in the tree */
 .sp-file-editor__tree li {
     padding: 6px 10px;
     border-radius: 4px;
@@ -487,20 +566,24 @@
     color: #50575e;
 }
 
+/* Muted appearance for disabled files */
 .sp-file-editor__tree li.is-disabled {
     opacity: 0.7;
 }
 
+/* Editor panel container */
 .sp-panel--editor {
     min-height: 360px;
     display: flex;
     flex-direction: column;
 }
 
+/* Flexible body area inside panels */
 .sp-panel__body {
     flex: 1;
 }
 
+/* Chrome-style code preview shell */
 .sp-code-preview {
     border: 1px solid #dcdcde;
     border-radius: 6px;
@@ -508,6 +591,7 @@
     margin-top: 16px;
 }
 
+/* Header bar for the preview shell */
 .sp-code-preview__header {
     display: flex;
     align-items: center;
@@ -518,6 +602,7 @@
     font-weight: 600;
 }
 
+/* Code block styling within preview */
 .sp-code-preview__body {
     margin: 0;
     padding: 18px;
@@ -529,6 +614,7 @@
     line-height: 1.55;
 }
 
+/* Decorative indicator dots */
 .dot {
     width: 10px;
     height: 10px;
@@ -536,52 +622,49 @@
     display: inline-block;
 }
 
+/* Red window control indicator */
 .dot--red {
     background: #ff5f56;
 }
 
+/* Yellow window control indicator */
 .dot--yellow {
     background: #ffbd2e;
 }
 
+/* Green window control indicator */
 .dot--green {
     background: #27c93f;
 }
 
+/* Footer spacing inside panels */
 .sp-panel__footer {
     margin-top: 20px;
 }
 
+/* Disabled button styling in panel footer */
 .sp-panel__footer .button[disabled] {
     cursor: not-allowed;
     opacity: 0.6;
 }
 
+/* Tabs row above editor sections */
 .sp-editor-tabs {
     margin-top: 24px;
 }
 
+/* Base styling for editor tabs */
 .sp-editor-tabs .nav-tab {
     font-size: 14px;
     padding: 8px 16px;
 }
 
+/* Active state for editor tabs */
 .sp-editor-tabs .nav-tab-active {
     background: #fff;
 }
 
-.sp-file-editor__tree {
-    list-style: none;
-    margin: 16px 0 0;
-    padding: 0;
-    display: grid;
-    gap: 6px;
-}
-
-.sp-file-editor__tree li {
-    margin: 0;
-}
-
+/* Link styling for individual file rows */
 .sp-file-editor__tree-link {
     display: block;
     padding: 8px 12px;
@@ -592,6 +675,7 @@
     transition: background 0.2s ease, color 0.2s ease;
 }
 
+/* Hover feedback on file rows */
 .sp-file-editor__tree-link:hover {
     background: #eef2ff;
     color: #3858e9;
