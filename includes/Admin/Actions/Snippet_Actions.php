@@ -35,7 +35,7 @@ class Snippet_Actions {
             return;
         }
 
-        if ( empty( $_POST ) || ! isset( $_POST['snippet_ids'] ) ) {
+        if ( empty( $_REQUEST['snippet_ids'] ) ) {
             return;
         }
 
@@ -43,20 +43,22 @@ class Snippet_Actions {
     }
 
     protected function handle_bulk_action(): void {
-        $primary   = isset( $_POST['action'] ) ? sanitize_key( wp_unslash( $_POST['action'] ) ) : '';
-        $secondary = isset( $_POST['action2'] ) ? sanitize_key( wp_unslash( $_POST['action2'] ) ) : '';
+        $primary   = isset( $_REQUEST['action'] ) ? sanitize_key( wp_unslash( $_REQUEST['action'] ) ) : '';
+        $secondary = isset( $_REQUEST['action2'] ) ? sanitize_key( wp_unslash( $_REQUEST['action2'] ) ) : '';
         $action    = '-1' !== $primary ? $primary : $secondary;
 
         if ( '' === $action || '-1' === $action ) {
             return;
         }
 
-        if ( ! isset( $_POST['_wpnonce'] ) || ! wp_verify_nonce( wp_unslash( $_POST['_wpnonce'] ), 'bulk-snippets' ) ) {
+        $nonce = isset( $_REQUEST['_wpnonce'] ) ? wp_unslash( $_REQUEST['_wpnonce'] ) : '';
+
+        if ( ! wp_verify_nonce( $nonce, 'bulk-snippets' ) ) {
             Notices::add( __( 'Security check failed. Please try again.', 'snippet-press' ), 'error' );
             $this->redirect_to_listing();
         }
 
-        $ids = isset( $_POST['snippet_ids'] ) ? array_map( 'absint', (array) $_POST['snippet_ids'] ) : [];
+        $ids = isset( $_REQUEST['snippet_ids'] ) ? array_map( 'absint', (array) $_REQUEST['snippet_ids'] ) : [];
 
         if ( empty( $ids ) ) {
             Notices::add( __( 'No snippets were selected.', 'snippet-press' ), 'warning' );
@@ -308,4 +310,3 @@ class Snippet_Actions {
         exit;
     }
 }
-
