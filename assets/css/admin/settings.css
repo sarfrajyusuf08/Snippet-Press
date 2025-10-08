@@ -96,6 +96,10 @@
     margin-top: 24px;
 }
 
+.sp-settings-page .sp-settings-tab-content {
+    padding-bottom: 48px;
+}
+
 
 .sp-settings-form {
     display: grid;
