@@ -1,0 +1,392 @@
+/* Settings, tools, and safe mode interfaces */
+.sp-file-editor__tree-link.is-active {
+    background: #3858e9;
+    color: #fff;
+}
+
+.sp-safe-mode-controls {
+    margin-top: 20px;
+}
+
+.sp-search-replace__panels {
+    margin-top: 24px;
+    display: grid;
+    gap: 24px;
+}
+
+.sp-search-replace__form .field {
+    margin-bottom: 18px;
+}
+
+.sp-search-replace__form label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: block;
+}
+
+.sp-search-replace__form textarea,
+.sp-search-replace__form input[type="text"] {
+    width: 100%;
+}
+
+.sp-search-replace__form .checkbox label {
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sp-search-replace__history-table .column-number {
+    width: 90px;
+    text-align: right;
+}
+
+.sp-settings-form .trio {
+    display: grid;
+    gap: 8px;
+}
+
+.sp-settings-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.sp-settings-inline span {
+    min-width: 90px;
+    font-weight: 600;
+}
+
+.sp-settings-page .sp-settings-form {
+    display: grid;
+    gap: 24px;
+    margin-top: 24px;
+}
+
+
+.sp-settings-form {
+    display: grid;
+    gap: 24px;
+}
+
+.sp-settings-form .field {
+    margin-bottom: 18px;
+}
+
+.sp-settings-form .field label {
+    font-weight: 600;
+    display: block;
+    margin-bottom: 6px;
+}
+
+.sp-settings-form .checkbox label {
+    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.sp-settings-inline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sp-settings-inline span {
+    min-width: 90px;
+    font-weight: 600;
+}
+
+.sp-search-replace__form select,
+.sp-search-replace__form textarea,
+.sp-search-replace__form input[type="text"],
+.sp-search-replace__form input[type="number"],
+.sp-search-replace__form input[type="file"],
+.sp-search-replace__form input[type="email"],
+.sp-search-replace__form input[type="url"],
+.sp-search-replace__form input[type="password"],
+.sp-settings-form select,
+.sp-settings-form textarea,
+.sp-settings-form input[type="text"],
+.sp-settings-form input[type="number"],
+.sp-settings-form input[type="email"],
+.sp-settings-form input[type="url"],
+.sp-settings-form input[type="password"],
+.sp-settings-form .sp-input,
+.sp-tools-page .sp-search-replace__form select,
+.sp-tools-page .sp-search-replace__form textarea,
+.sp-tools-page .sp-search-replace__form input[type="text"],
+.sp-tools-page .sp-search-replace__form input[type="number"],
+.sp-tools-page .sp-search-replace__form input[type="file"] {
+    border: 1px solid #d0d5dd;
+    border-radius: 8px;
+    background: #fff;
+    padding: 10px 14px;
+    box-shadow: 0 1px 2px rgba(16, 24, 40, 0.05);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    max-width: 420px;
+}
+
+.sp-search-replace__form textarea,
+.sp-settings-form textarea {
+    min-height: 120px;
+}
+
+.sp-search-replace__form input:focus,
+.sp-search-replace__form textarea:focus,
+.sp-settings-form input:focus,
+.sp-settings-form textarea:focus,
+.sp-tools-page .sp-search-replace__form input:focus,
+.sp-tools-page .sp-search-replace__form textarea:focus,
+.sp-search-replace__form select:focus,
+.sp-settings-form select:focus,
+.sp-tools-page .sp-search-replace__form select:focus {
+    outline: none;
+    border-color: #3858e9;
+    box-shadow: 0 0 0 3px rgba(56, 88, 233, 0.25);
+}
+
+.sp-settings-page .sp-panel,
+.sp-tools-page .sp-panel,
+.sp-search-replace-page .sp-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.sp-panel h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+.sp-panel .description {
+    margin: 0;
+    color: #6b7280;
+}
+
+.sp-checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 6px 0;
+    cursor: pointer;
+    font-weight: 500;
+    position: relative;
+}
+
+.sp-checkbox input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.sp-checkbox__control {
+    width: 18px;
+    height: 18px;
+    border: 1px solid #d0d5dd;
+    border-radius: 4px;
+    background: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+.sp-checkbox__control::after {
+    content: '';
+    width: 6px;
+    height: 10px;
+    border: 2px solid transparent;
+    border-right-color: #fff;
+    /* was border-left-color */
+    border-bottom-color: #fff;
+    transform: rotate(45deg);
+    /* was -45deg */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.sp-checkbox input:checked+.sp-checkbox__control {
+    border-color: #3858e9;
+    background: #3858e9;
+}
+
+.sp-checkbox input:checked+.sp-checkbox__control::after {
+    opacity: 1;
+}
+
+.sp-checkbox__label {
+    font-weight: 500;
+    color: #1d2327;
+}
+
+.sp-checkbox-grid {
+    display: grid;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.sp-form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 16px;
+    flex-wrap: wrap;
+}
+
+.sp-settings-form {
+    /*max-width: 560px;*/
+    width: 100%;
+}
+
+.sp-settings-inline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sp-settings-inline span {
+    min-width: 90px;
+    font-weight: 600;
+}
+
+.sp-empty-panel--library {
+    display: none;
+    margin-top: 16px;
+}
+
+.sp-empty-panel--library.is-visible {
+    display: block;
+}
+
+
+.sp-file-editor__meta {
+    margin: 20px 0 12px;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.sp-file-editor__meta li {
+    background: #f6f7f7;
+    border-radius: 4px;
+    padding: 10px 14px;
+    min-width: 180px;
+}
+
+.sp-file-editor__meta strong {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+
+.sp-code-editor {
+    width: 100%;
+    border: 1px solid #dcdcde;
+    border-radius: 6px;
+    min-height: 320px;
+    font-family: Consolas, Monaco, 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    padding: 16px;
+    resize: vertical;
+    background: #fff;
+    color: #1d2327;
+}
+
+.sp-code-editor[readonly] {
+    background: #f6f7f7;
+    color: #6b7280;
+}
+
+.sp-file-editor__form .sp-form-actions {
+    margin-top: 16px;
+}
+
+.sp-file-editor__tree-item.is-disabled .sp-file-editor__tree-link {
+    opacity: 0.7;
+    cursor: default;
+}
+
+.sp-file-editor__tree-item.is-disabled .sp-file-editor__tree-link:hover {
+    background: #f6f7f7;
+    color: #1d2327;
+}
+
+
+.sp-panel__header--file {
+    align-items: flex-start;
+    gap: 16px;
+}
+
+.sp-panel__title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.sp-panel__title h2 {
+    margin: 0;
+}
+
+.sp-quick-actions-card {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background: #f6f7f7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    gap: 8px;
+    min-width: 220px;
+}
+
+.sp-quick-actions-card h3 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: #6b7280;
+}
+
+.sp-quick-actions-card__body {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.sp-quick-actions-card__body .button {
+    display: inline-flex;
+    align-items: center;
+}
+
+.sp-quick-actions-card__form {
+    margin: 0;
+}
+
+@media (max-width: 782px) {
+    .sp-panel__header--file {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sp-quick-actions-card {
+        width: 100%;
+    }
+
+    .sp-quick-actions-card__body {
+        width: 100%;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .sp-quick-actions-card__body .button {
+        width: 100%;
+        justify-content: center;
+    }
+}

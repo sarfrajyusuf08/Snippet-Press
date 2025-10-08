@@ -4,6 +4,7 @@ namespace SnippetPress\Admin\Pages;
 
 use SnippetPress\Admin\Notices;
 use SnippetPress\Infrastructure\Capabilities;
+use SnippetPress\Safety\Safe_Mode_Manager;
 
 /**
  * Renders the Snippet Press settings dashboard with categorized tabs.
@@ -151,6 +152,75 @@ class Settings_Page extends Abstract_Admin_Page {
         submit_button( __( 'Save Changes', 'snippet-press' ), 'primary', 'submit', false );
         echo '</div>';
         echo '</form>';
+
+        $state      = get_option( Safe_Mode_Manager::SAFE_MODE_OPTION, [] );
+        $state      = is_array( $state ) ? $state : [];
+        $is_active  = ! empty( $state['enabled'] );
+        $snippet_id = isset( $state['snippet_id'] ) ? (int) $state['snippet_id'] : 0;
+        $last_error = isset( $state['error'] ) ? wp_strip_all_tags( (string) $state['error'] ) : '';
+        $timestamp  = isset( $state['timestamp'] ) ? (int) $state['timestamp'] : 0;
+        $redirect   = $this->page_url( self::TAB_SAFETY );
+
+        echo '<div class="sp-panel sp-safe-mode-controls">';
+        echo '<h2>' . esc_html__( 'Safe Mode Controls', 'snippet-press' ) . '</h2>';
+        echo '<p class="description">' . esc_html__( 'Toggle safe mode manually when you need to pause snippet execution before trying risky changes.', 'snippet-press' ) . '</p>';
+
+        echo '<div class="field">';
+        echo '<p><strong>' . esc_html__( 'Current status:', 'snippet-press' ) . '</strong> ' . esc_html( $is_active ? __( 'Active', 'snippet-press' ) : __( 'Inactive', 'snippet-press' ) ) . '</p>';
+
+        if ( $is_active ) {
+            echo '<p>' . esc_html__( 'Snippets are paused until you disable safe mode.', 'snippet-press' ) . '</p>';
+
+            if ( $snippet_id ) {
+                $title     = get_the_title( $snippet_id );
+                $edit_link = get_edit_post_link( $snippet_id, 'display' );
+
+                if ( $title ) {
+                    echo '<p><strong>' . esc_html__( 'Affected snippet:', 'snippet-press' ) . '</strong> ';
+
+                    if ( $edit_link ) {
+                        printf( '<a href="%1$s">%2$s</a>', esc_url( $edit_link ), esc_html( $title ) );
+                    } else {
+                        echo esc_html( $title );
+                    }
+
+                    echo '</p>';
+                }
+            }
+
+            if ( $last_error !== '' ) {
+                echo '<p><strong>' . esc_html__( 'Last captured error:', 'snippet-press' ) . '</strong> <code>' . esc_html( $last_error ) . '</code></p>';
+            }
+
+            if ( $timestamp > 0 ) {
+                $format = sprintf( '%s %s', get_option( 'date_format' ), get_option( 'time_format' ) );
+                echo '<p><strong>' . esc_html__( 'Entered:', 'snippet-press' ) . '</strong> ' . esc_html( wp_date( $format, $timestamp ) ) . '</p>';
+            }
+        } else {
+            echo '<p>' . esc_html__( 'Snippets run normally. Enable safe mode to pause execution before testing changes.', 'snippet-press' ) . '</p>';
+        }
+        echo '</div>';
+
+        echo '<div class="sp-form-actions">';
+
+        if ( $is_active ) {
+            echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="sp-safe-mode-toggle">';
+            wp_nonce_field( 'sp_exit_safe_mode' );
+            echo '<input type="hidden" name="action" value="sp_exit_safe_mode" />';
+            echo '<input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '" />';
+            submit_button( __( 'Disable Safe Mode', 'snippet-press' ), 'primary', 'submit', false );
+            echo '</form>';
+        } else {
+            echo '<form method="post" action="' . esc_url( admin_url( 'admin-post.php' ) ) . '" class="sp-safe-mode-toggle">';
+            wp_nonce_field( 'sp_enable_safe_mode' );
+            echo '<input type="hidden" name="action" value="sp_enable_safe_mode" />';
+            echo '<input type="hidden" name="redirect_to" value="' . esc_attr( $redirect ) . '" />';
+            submit_button( __( 'Enable Safe Mode', 'snippet-press' ), 'secondary', 'submit', false );
+            echo '</form>';
+        }
+
+        echo '</div>';
+        echo '</div>';
     }
 
     protected function render_linting_tab( array $settings, string $active ): void {

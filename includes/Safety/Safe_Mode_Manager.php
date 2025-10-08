@@ -24,6 +24,7 @@ class Safe_Mode_Manager extends Service_Provider {
         add_action( 'init', [ $this, 'bootstrap_safe_mode' ] );
         add_action( 'admin_notices', [ $this, 'maybe_show_notice' ] );
         add_action( 'admin_post_sp_exit_safe_mode', [ $this, 'handle_exit_safe_mode' ] );
+        add_action( 'admin_post_sp_enable_safe_mode', [ $this, 'handle_enable_safe_mode' ] );
     }
 
     /**
@@ -88,21 +89,17 @@ class Safe_Mode_Manager extends Service_Provider {
             return;
         }
 
-        $state = $this->get_state();
-
-        $state['enabled']   = true;
-        $state['error']     = isset( $error['message'] ) ? (string) $error['message'] : '';
-        $state['timestamp'] = time();
+        $error_message = isset( $error['message'] ) ? (string) $error['message'] : '';
 
         if ( $this->last_snippet_id ) {
-            $state['snippet_id'] = $this->last_snippet_id;
+            $this->enable_safe_mode( $this->last_snippet_id, $error_message );
             $this->quarantine_snippet( $this->last_snippet_id );
-            $this->add_activation_notice( $this->last_snippet_id, $state['error'] );
+            $this->add_activation_notice( $this->last_snippet_id, $error_message );
         } else {
-            $this->add_activation_notice( 0, $state['error'] );
+            $this->enable_safe_mode( 0, $error_message );
+            $this->add_activation_notice( 0, $error_message );
         }
 
-        $this->update_state( $state );
         $this->clear_tracked_snippet();
     }
 
@@ -167,7 +164,12 @@ class Safe_Mode_Manager extends Service_Provider {
         $this->disable_safe_mode();
         Notices::add( __( 'Safe mode disabled. Snippets can now run normally.', 'snippet-press' ), 'success' );
 
-        wp_safe_redirect( admin_url( 'admin.php?page=sp-code-snippet' ) );
+        $redirect = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '';
+        if ( ! $redirect ) {
+            $redirect = admin_url( 'admin.php?page=sp-code-snippet' );
+        }
+
+        wp_safe_redirect( $redirect );
         exit;
     }
 
@@ -183,6 +185,32 @@ class Safe_Mode_Manager extends Service_Provider {
                 'timestamp'  => 0,
             ]
         );
+    }
+
+    /**
+     * Manually enable safe mode without quarantining a snippet.
+     */
+    public function handle_enable_safe_mode(): void {
+        if ( ! current_user_can( Capabilities::MANAGE ) ) {
+            wp_die( esc_html__( 'You do not have permission to modify safe mode.', 'snippet-press' ), 403 );
+        }
+
+        $nonce = isset( $_REQUEST['_wpnonce'] ) ? wp_unslash( $_REQUEST['_wpnonce'] ) : '';
+
+        if ( ! wp_verify_nonce( $nonce, 'sp_enable_safe_mode' ) ) {
+            wp_die( esc_html__( 'Invalid request.', 'snippet-press' ), 403 );
+        }
+
+        $this->enable_safe_mode();
+        Notices::add( __( 'Safe mode enabled. Snippet execution is paused until you disable it.', 'snippet-press' ), 'warning' );
+
+        $redirect = isset( $_REQUEST['redirect_to'] ) ? esc_url_raw( wp_unslash( $_REQUEST['redirect_to'] ) ) : '';
+        if ( ! $redirect ) {
+            $redirect = admin_url( 'admin.php?page=sp-code-snippet' );
+        }
+
+        wp_safe_redirect( $redirect );
+        exit;
     }
 
     /**
@@ -220,6 +248,19 @@ class Safe_Mode_Manager extends Service_Provider {
 
         Notices::add( $message, 'error' );
     }
-}
 
+    /**
+     * Persist a safe mode state with optional metadata.
+     */
+    protected function enable_safe_mode( int $snippet_id = 0, string $error_message = '' ): void {
+        $state = $this->get_state();
+
+        $state['enabled']    = true;
+        $state['snippet_id'] = $snippet_id;
+        $state['error']      = $error_message;
+        $state['timestamp']  = time();
+
+        $this->update_state( $state );
+    }
+}
 
