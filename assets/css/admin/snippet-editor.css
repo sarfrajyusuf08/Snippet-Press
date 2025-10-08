@@ -1,29 +1,36 @@
 /* Snippet editor layout */
+
+/* Light background behind the snippet editing screens */
 body.post-type-sp_snippet #wpbody-content {
     background: #f5f7fb;
 }
 
+/* Constrain and pad the editor container */
 body.post-type-sp_snippet .wrap {
     margin: 0;
     padding: 24px 24px 60px;
     max-width: 1080px;
 }
 
+/* Remove default top padding from poststuff wrapper */
 body.post-type-sp_snippet #poststuff {
     padding-top: 0;
 }
 
+/* Force single-column layout for the custom editor */
 body.post-type-sp_snippet #post-body.columns-2 {
     margin-right: 0;
     float: none;
     width: 100%;
 }
 
+/* Hide unused default metabox column and submit box */
 body.post-type-sp_snippet #postbox-container-1,
 body.post-type-sp_snippet #submitdiv {
     display: none;
 }
 
+/* Styled title block for snippet name */
 body.post-type-sp_snippet #titlediv {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -33,10 +40,12 @@ body.post-type-sp_snippet #titlediv {
     box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
 }
 
+/* Hide the default title label */
 body.post-type-sp_snippet #titlewrap label {
     display: none;
 }
 
+/* Title input typography and reset */
 body.post-type-sp_snippet #title {
     border: 0;
     box-shadow: none;
@@ -46,11 +55,13 @@ body.post-type-sp_snippet #title {
     color: #111827;
 }
 
+/* Clean focus state for the title field */
 body.post-type-sp_snippet #title:focus {
     outline: none;
     box-shadow: none;
 }
 
+/* Container styling for the code editor block */
 body.post-type-sp_snippet #postdivrich {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -61,6 +72,7 @@ body.post-type-sp_snippet #postdivrich {
     padding: 18px 0 24px;
 }
 
+/* Heading displayed above the code editor */
 body.post-type-sp_snippet #postdivrich::before {
     content: 'Code Preview';
     display: block;
@@ -70,11 +82,13 @@ body.post-type-sp_snippet #postdivrich::before {
     padding: 0 20px 12px;
 }
 
+/* Remove borders around the editor iframe */
 body.post-type-sp_snippet #wp-content-editor-container {
     border: 0;
     padding: 0 20px;
 }
 
+/* Code editor textarea styling */
 body.post-type-sp_snippet #content,
 body.post-type-sp_snippet #content:focus {
     border-radius: 8px;
@@ -84,6 +98,7 @@ body.post-type-sp_snippet #content:focus {
     min-height: 320px;
 }
 
+/* Outer card that wraps all snippet settings */
 .sp-snippet-editor {
     background: #ffffff;
     border: 1px solid #e0e7ff;
@@ -96,6 +111,7 @@ body.post-type-sp_snippet #content:focus {
     margin-bottom: 32px;
 }
 
+/* Toolbar containing status and save actions */
 .sp-snippet-toolbar {
     display: flex;
     align-items: center;
@@ -106,18 +122,21 @@ body.post-type-sp_snippet #content:focus {
     border-bottom: 1px dashed #dbeafe;
 }
 
+/* Cluster for the status switch and label */
 .sp-snippet-toolbar__status {
     display: flex;
     align-items: center;
     gap: 16px;
 }
 
+/* Label indicating current snippet status */
 .sp-snippet-toolbar__status-label {
     font-weight: 600;
     color: #111827;
     font-size: 15px;
 }
 
+/* Custom toggle switch for enable/disable */
 .sp-switch {
     position: relative;
     display: inline-flex;
@@ -126,6 +145,7 @@ body.post-type-sp_snippet #content:focus {
     cursor: pointer;
 }
 
+/* Hide the native checkbox for the switch */
 .sp-switch input {
     position: absolute;
     opacity: 0;
@@ -133,6 +153,7 @@ body.post-type-sp_snippet #content:focus {
     height: 0;
 }
 
+/* Switch track background */
 .sp-switch__track {
     width: 48px;
     height: 26px;
@@ -142,6 +163,7 @@ body.post-type-sp_snippet #content:focus {
     transition: background 0.2s ease;
 }
 
+/* Draggable thumb inside the switch */
 .sp-switch__track::after {
     content: '';
     width: 20px;
@@ -155,23 +177,28 @@ body.post-type-sp_snippet #content:focus {
     box-shadow: 0 1px 3px rgba(15, 23, 42, 0.25);
 }
 
+/* Active state background colour */
 .sp-switch input:checked+.sp-switch__track {
     background: #2563eb;
 }
 
+/* Shift the thumb when enabled */
 .sp-switch input:checked+.sp-switch__track::after {
     transform: translateX(22px);
 }
 
+/* Label text next to the switch */
 .sp-switch__text {
     font-weight: 600;
     color: #6b7280;
 }
 
+/* Highlighted label when switch is on */
 .sp-switch__text.is-active {
     color: #2563eb;
 }
 
+/* Primary save button styling */
 .sp-snippet-toolbar__save {
     padding: 12px 26px;
     font-size: 15px;
@@ -181,12 +208,14 @@ body.post-type-sp_snippet #content:focus {
     transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+/* Flex column for grouped form sections */
 .sp-snippet-editor__panel {
     display: flex;
     flex-direction: column;
     gap: 24px;
 }
 
+/* Scope preview callout box */
 .sp-snippet-scope-preview {
     margin: 12px 0 24px;
     padding: 16px 20px;
@@ -198,6 +227,7 @@ body.post-type-sp_snippet #content:focus {
     gap: 12px;
 }
 
+/* Title label inside the scope preview */
 .sp-snippet-scope-preview__title {
     font-size: 13px;
     font-weight: 600;
@@ -206,12 +236,14 @@ body.post-type-sp_snippet #content:focus {
     color: #2563eb;
 }
 
+/* Badge list showing applicable scopes */
 .sp-snippet-scope-preview__badges {
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
 }
 
+/* Base styling for each scope badge */
 .sp-scope-badge {
     display: inline-flex;
     align-items: center;
@@ -223,46 +255,55 @@ body.post-type-sp_snippet #content:focus {
     color: #1d4ed8;
 }
 
+/* Colour variant for admin scope */
 .sp-scope-badge--admin {
     background: #fef3c7;
     color: #92400e;
 }
 
+/* Variant for login scope */
 .sp-scope-badge--login {
     background: #ede9fe;
     color: #5b21b6;
 }
 
+/* Variant for editor scope */
 .sp-scope-badge--editor {
     background: #dcfce7;
     color: #166534;
 }
 
+/* Variant for REST scope */
 .sp-scope-badge--rest {
     background: #fce7f3;
     color: #be185d;
 }
 
+/* Style for when no scopes are selected */
 .sp-scope-badge--empty {
     background: #e5e7eb;
     color: #374151;
     font-weight: 500;
 }
 
+/* Descriptive text under the scope badges */
 .sp-snippet-scope-preview__summary {
     margin: 0;
     font-size: 12px;
     color: #475569;
 }
 
+/* Optional link aligned with scope preview */
 .sp-snippet-scope-preview__link {
     align-self: flex-start;
 }
 
+/* Ensure tag input stretches full width */
 .sp-field--tags .sp-snippet-tags__input {
     max-width: 100%;
 }
 
+/* Container for suggested tags */
 .sp-tag-suggestions {
     display: flex;
     flex-wrap: wrap;
@@ -270,6 +311,7 @@ body.post-type-sp_snippet #content:focus {
     margin-top: 8px;
 }
 
+/* Individual suggested tag chip */
 .sp-tag-suggestion {
     display: inline-flex;
     align-items: center;
@@ -283,12 +325,14 @@ body.post-type-sp_snippet #content:focus {
     transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 
+/* Hover state for suggested tags */
 .sp-tag-suggestion:hover {
     background: #1d4ed8;
     border-color: #1d4ed8;
     color: #fff;
 }
 
+/* Generic section card inside the editor */
 .sp-snippet-editor__section {
     background: #f8fbff;
     border: 1px solid #e2e8f0;
@@ -296,6 +340,7 @@ body.post-type-sp_snippet #content:focus {
     padding: 24px 28px;
 }
 
+/* Section header styling */
 .sp-snippet-editor__section-title {
     margin: 0 0 16px;
     font-size: 16px;
@@ -303,14 +348,17 @@ body.post-type-sp_snippet #content:focus {
     color: #111827;
 }
 
+/* Default spacing between fields */
 .sp-field {
     margin-bottom: 18px;
 }
 
+/* Remove bottom margin on final field */
 .sp-field:last-child {
     margin-bottom: 0;
 }
 
+/* Labels for form controls */
 .sp-field__label {
     display: block;
     font-weight: 600;
@@ -319,6 +367,7 @@ body.post-type-sp_snippet #content:focus {
     letter-spacing: .01em;
 }
 
+/* Base input styling */
 .sp-field__control {
     width: 100%;
     border: 1px solid #d1d5db;
@@ -328,18 +377,21 @@ body.post-type-sp_snippet #content:focus {
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
+/* Emphasise focus state on inputs */
 .sp-field__control:focus {
     outline: none;
     border-color: #2563eb;
     box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.35);
 }
 
+/* Helper text under inputs */
 .sp-field__description {
     margin: 6px 0 0;
     font-size: 13px;
     color: #64748b;
 }
 
+/* Group of scope selection pills */
 .sp-snippet-scopes {
     display: flex;
     flex-wrap: wrap;
@@ -347,6 +399,7 @@ body.post-type-sp_snippet #content:focus {
     margin-top: 10px;
 }
 
+/* Individual scope toggle pill */
 .sp-snippet-scope-option {
     display: inline-flex;
     align-items: center;
@@ -361,19 +414,23 @@ body.post-type-sp_snippet #content:focus {
     transition: border-color 0.2s ease, color 0.2s ease;
 }
 
+/* Hide radio/checkbox spacing within pill */
 .sp-snippet-scope-option input {
     margin: 0;
 }
 
+/* Hover state for scope pill */
 .sp-snippet-scope-option:hover {
     border-color: #2563eb;
     color: #2563eb;
 }
 
+/* Active colour when scope selected */
 .sp-snippet-scope-option input:checked+span {
     color: #2563eb;
 }
 
+/* Collapsible advanced settings panel */
 .sp-snippet-advanced {
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -381,6 +438,7 @@ body.post-type-sp_snippet #content:focus {
     padding: 18px 20px;
 }
 
+/* Summary row for the advanced panel */
 .sp-snippet-advanced summary {
     font-weight: 600;
     cursor: pointer;
@@ -389,6 +447,7 @@ body.post-type-sp_snippet #content:focus {
     padding-right: 26px;
 }
 
+/* Chevron indicator for advanced panel */
 .sp-snippet-advanced summary::after {
     content: "";
     position: absolute;
@@ -404,14 +463,17 @@ body.post-type-sp_snippet #content:focus {
     transition: transform 0.2s ease;
 }
 
+/* Rotate chevron when panel is open */
 .sp-snippet-advanced[open] summary::after {
     transform: translateY(-50%) rotate(180deg);
 }
 
+/* Hide default disclosure triangle */
 .sp-snippet-advanced summary::-webkit-details-marker {
     display: none;
 }
 
+/* Layout for advanced settings grid */
 .sp-snippet-advanced__grid {
     margin-top: 18px;
     display: grid;
@@ -419,17 +481,21 @@ body.post-type-sp_snippet #content:focus {
 }
 
 @media (min-width: 782px) {
+
+    /* Two-column layout for advanced settings on larger screens */
     .sp-snippet-advanced__grid {
         grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
+/* Ensure main content column spans full width */
 body.post-type-sp_snippet #post-body-content {
     margin: 0;
     float: none;
     width: 100%;
 }
 
+/* Align admin notices/meta rows with new layout */
 body.post-type-sp_snippet .notice,
 body.post-type-sp_snippet #screen-meta,
 body.post-type-sp_snippet .screen-meta-links {
@@ -437,6 +503,8 @@ body.post-type-sp_snippet .screen-meta-links {
 }
 
 @media (max-width: 782px) {
+
+    /* Stack toolbar buttons on smaller screens */
     body.post-type-sp_snippet .sp-snippet-toolbar {
         display: flex;
         align-items: center;
@@ -447,12 +515,14 @@ body.post-type-sp_snippet .screen-meta-links {
         border-bottom: 1px dashed #dbeafe;
     }
 
+    /* Make save button full width on mobile */
     body.post-type-sp_snippet .sp-snippet-toolbar__save {
         width: 100%;
     }
 }
 
 
+/* Lift the save button slightly on hover/focus */
 .sp-snippet-toolbar__save:hover,
 .sp-snippet-toolbar__save:focus {
     transform: translateY(-1px);
